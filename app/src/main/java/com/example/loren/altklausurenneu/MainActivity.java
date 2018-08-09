@@ -1,8 +1,12 @@
 package com.example.loren.altklausurenneu;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -12,9 +16,24 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    ListView listViewExam;
+
+    private static final  String TAG = "MainActivity";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +59,36 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+
+        Log.d(TAG, "onCreate: Started.");
+        listViewExam = (ListView)findViewById(R.id.list_exams);
+
+        //Exams for example
+        Exam exam1 = new Exam("Mathematische Grundlagen 1", "SS 18 Probeklausur");
+        Exam exam2 = new Exam("Mathematische Grundlagen 2", "SS 17 1. Zeitraum");
+        Exam exam3 = new Exam("Mathematische Grundlagen 1", "WS 17/18 2. Zeitraum");
+        Exam exam4 = new Exam("Mathematische Grundlagen 2", "SS 18 Gedächtnisprotokoll");
+
+        // ArrayList to keep Exams
+
+        ArrayList<Exam> exams = new ArrayList<>();
+        exams.add(exam1);
+        exams.add(exam2);
+        exams.add(exam3);
+        exams.add(exam4);
+
+        // Array Adapter for Custom ListView
+
+        ExamListAdapter arrayAdapter = new ExamListAdapter(this, R.layout.adpaterview_layout,exams );
+        listViewExam.setAdapter(arrayAdapter);
+
+
+
+
     }
+
+
 
     @Override
     public void onBackPressed() {
