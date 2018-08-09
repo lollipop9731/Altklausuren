@@ -20,15 +20,25 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_main" />
+    <include
+        android:id="@+id/include"
+        layout="@layout/content_main" />
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+
+    <io.github.yavski.fabspeeddial.FabSpeedDial
+        android:id="@+id/fabidnew"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@drawable/ic_add_white_24dp" />
+        android:gravity="bottom| end "
+        app:fabBackgroundTint="@color/colorAccent"
+        app:fabDrawableTint="@android:color/white"
+        app:fabGravity="bottom_end"
+        app:fabMenu="@menu/fab_menu"
+        app:miniFabBackgroundTintList="@array/fab_menu_item_colors"
+        app:layout_anchor="@+id/include"
+        app:layout_anchorGravity="right|bottom">
+
+    </io.github.yavski.fabspeeddial.FabSpeedDial>
 
     <ListView
         android:id="@+id/list_exams"

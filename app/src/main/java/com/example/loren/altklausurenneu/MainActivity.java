@@ -1,9 +1,11 @@
 package com.example.loren.altklausurenneu;
 
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
@@ -27,10 +29,13 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.yavski.fabspeeddial.FabSpeedDial;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     ListView listViewExam;
+    FabSpeedDial fabSpeedDial;
 
     private static final  String TAG = "MainActivity";
 
@@ -62,7 +67,31 @@ public class MainActivity extends AppCompatActivity
 
 
         Log.d(TAG, "onCreate: Started.");
+
+        //Views
         listViewExam = (ListView)findViewById(R.id.list_exams);
+        fabSpeedDial = (FabSpeedDial)findViewById(R.id.fabidnew);
+
+        fabSpeedDial.setMenuListener(new FabSpeedDial.MenuListener() {
+            @Override
+            public boolean onPrepareMenu(NavigationMenu navigationMenu) {
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemSelected(MenuItem menuItem) {
+                Intent intent = new Intent(MainActivity.this,WebViewclass.class);
+                startActivity(intent);
+                return true;
+            }
+
+            @Override
+            public void onMenuClosed() {
+
+            }
+        });
+
+
 
         //Exams for example
         Exam exam1 = new Exam("Mathematische Grundlagen 1", "SS 18 Probeklausur");

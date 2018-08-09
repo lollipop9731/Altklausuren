@@ -3,4 +3,14 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="color_complementary_yellow">#efe669</color>
+    <color name="color_analogous_türkis">#5cb8db</color>
+    <!-- Colors for FAB-->
+    <integer-array name="fab_menu_item_colors">
+        <!-- A dark Holo shade of red -->
+        <item>@color/color_complementary_yellow</item>
+
+        <!-- A light Holo shade of green -->
+        <item>@color/color_analogous_türkis</item>
+    </integer-array>
 </resources>
