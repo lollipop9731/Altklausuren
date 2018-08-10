@@ -47,14 +47,7 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -69,9 +62,10 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "onCreate: Started.");
 
         //Views
-        listViewExam = (ListView)findViewById(R.id.list_exams);
+
         fabSpeedDial = (FabSpeedDial)findViewById(R.id.fabidnew);
 
+        //Listener for clicks of FAB
         fabSpeedDial.setMenuListener(new FabSpeedDial.MenuListener() {
             @Override
             public boolean onPrepareMenu(NavigationMenu navigationMenu) {
@@ -79,9 +73,9 @@ public class MainActivity extends AppCompatActivity
             }
 
             @Override
+            //handle clicks on miniFab here
             public boolean onMenuItemSelected(MenuItem menuItem) {
-                Intent intent = new Intent(MainActivity.this,WebViewclass.class);
-                startActivity(intent);
+                //Action here
                 return true;
             }
 
@@ -100,17 +94,32 @@ public class MainActivity extends AppCompatActivity
         Exam exam4 = new Exam("Mathematische Grundlagen 2", "SS 18 Gedächtnisprotokoll");
 
         // ArrayList to keep Exams
-
-        ArrayList<Exam> exams = new ArrayList<>();
+        final ArrayList<Exam> exams = new ArrayList<>();
         exams.add(exam1);
         exams.add(exam2);
         exams.add(exam3);
         exams.add(exam4);
 
         // Array Adapter for Custom ListView
-
-        ExamListAdapter arrayAdapter = new ExamListAdapter(this, R.layout.adpaterview_layout,exams );
+        ExamListAdapter arrayAdapter = new ExamListAdapter(this,    exams );
+        listViewExam = (ListView)findViewById(R.id.list_exams);
         listViewExam.setAdapter(arrayAdapter);
+
+
+
+        listViewExam.setOnItemClickListener(
+                new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                String name = exams.get(position).getName();
+                Intent intent = new Intent(MainActivity.this,WebViewclass.class);
+                startActivity(intent);
+            }
+        });
+
+
+
+
 
 
 
@@ -145,6 +154,7 @@ public class MainActivity extends AppCompatActivity
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+
             return true;
         }
 
@@ -171,4 +181,6 @@ public class MainActivity extends AppCompatActivity
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
+
+
 }

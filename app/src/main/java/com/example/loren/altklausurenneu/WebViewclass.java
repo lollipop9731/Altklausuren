@@ -21,21 +21,36 @@ public class WebViewclass extends AppCompatActivity {
         listener();
     }
 
+
+    /**
+     * Initializes the Webview with settings
+     * Settings for ProgressDialog
+     * loads URL in Google Docs WebView
+     */
     private void init(){
         webView = (WebView)findViewById(R.id.webview);
         webView.getSettings().setJavaScriptEnabled(true);
         webView.getSettings().setBuiltInZoomControls(true);
         webView.getSettings().setDisplayZoomControls(false);
 
+        //ProgressDialog
+
         progressDialog = new ProgressDialog(WebViewclass.this);
         progressDialog.setTitle("PDF");
         progressDialog.setMessage("Lädt...");
         progressDialog.setIndeterminate(false);
         progressDialog.setCancelable(false);
-        webView.loadUrl("http://docs.google.com/gview?embedded=true&url=https://www.einfach-fuer-alle.de/artikel/checkliste-barrierefreie-pdf/Checkliste-Barrierefreies-PDF.pdf");
+
+        //Example URL from PDF, loads
+        webView.loadUrl("http://docs.google.com/gview?embedded=true&url=http://www.math.rwth-aachen.de/homes/Klausuren/Diskrete_Strukturen/Pahlings_90_n.pdf");
 
     }
 
+    /**
+     * Sets WebView Client
+     * onPage started -> Progress shows
+     * onPage finished -> Progress dismisses
+     */
     private void listener(){
         webView.setWebViewClient(new WebViewClient(){
             @Override
