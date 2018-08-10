@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "1030021640602",
+    "firebase_url": "https://altklausuren-31811.firebaseio.com",
+    "project_id": "altklausuren-31811",
+    "storage_bucket": "altklausuren-31811.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1030021640602:android:b7657993d64de19b",
+        "android_client_info": {
+          "package_name": "com.example.loren.altklausuren"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1030021640602-ogseme0so7tolqhad944dsn6t6sth9pg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.loren.altklausuren",
+            "certificate_hash": "db71bdb91b44bfbf4392cd88f32f79d4cab7c876"
+          }
+        },
+        {
+          "client_id": "1030021640602-o49vgkerh1dk8ggtt9uoa52acmhq2moh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDByjfaDM5kGqjW7oXw8NOYvgAVYRMs9T8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1030021640602-o49vgkerh1dk8ggtt9uoa52acmhq2moh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
