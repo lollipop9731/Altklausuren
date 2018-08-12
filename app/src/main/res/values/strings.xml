@@ -11,6 +11,8 @@
     <string name="protocols">Meine Protokolle</string>
     <string name="settings">Einstellungen</string>
     <string name="action_sort">Ordnen</string>
+    <string name="hint_mail"><i>E-Mail</i></string>
+    <string name="hint_passwort"><i>Passwort</i></string>
 
 
     <string name="label_google_sign_in">Firebase + Google Sign In</string>
