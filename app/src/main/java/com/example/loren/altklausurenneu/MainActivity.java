@@ -26,6 +26,9 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -39,6 +42,7 @@ public class MainActivity extends AppCompatActivity
     FabSpeedDial fabSpeedDial;
 
     private static final  String TAG = "MainActivity";
+    private FirebaseAuth mAuth;
 
 
     @Override
@@ -47,6 +51,8 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mAuth = FirebaseAuth.getInstance();
 
 
 
@@ -134,7 +140,7 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            super.onBackPressed();
+
         }
     }
 
@@ -155,9 +161,16 @@ public class MainActivity extends AppCompatActivity
         //noinspection SimplifiableIfStatement
         //settings
         if (id == R.id.action_settings) {
+
+            return true;
+        }
+        if(id==R.id.action_signout){
+            mAuth.signOut();
+            showSnackbar("Erfolgreich abgemeldet.");
             Intent intent = new Intent(MainActivity.this,Login.class);
             startActivity(intent);
             return true;
+
         }
 
         return super.onOptionsItemSelected(item);
@@ -182,6 +195,10 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void showSnackbar(String message) {
+        Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT).show();
     }
 
 

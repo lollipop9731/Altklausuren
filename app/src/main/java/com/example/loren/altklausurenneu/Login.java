@@ -1,7 +1,9 @@
 package com.example.loren.altklausurenneu;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.PorterDuff;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -35,19 +37,20 @@ public class Login extends AppCompatActivity {
 
     private static final String TAG = "Login";
     private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
+
     private String mEmailLink;
-    private TextView mStatusText;
+
 
     private EditText emailfield;
-    Button sign_in_btn, msign_out_btn,sendlink;
+    Button sign_in_btn, sendlink;
     String mPendingEmail;
     String loginMail;
-
+    public ProgressDialog mProgressDialog;
 
     private static final String KEY_PENDING_EMAIL = "key_pending_email";
     private static final String SHARED_PREFERENCES_NAME = "MAILLOCALLY";
     private static final String SHARED_PREFERENCES_KEY = "SharedKEY";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,21 +62,27 @@ public class Login extends AppCompatActivity {
 
         setContentView(R.layout.activity_login);
 
+        //gets current user
         mAuth = FirebaseAuth.getInstance();
 
 
-
+        //checks if already logged in
+        if (mAuth.getCurrentUser() != null) {
+            startMain();
+        }
 
 
         //UI Reference
         emailfield = (EditText) findViewById(R.id.email);
-        msign_out_btn = (Button)findViewById(R.id.signout);
         sign_in_btn = (Button) findViewById(R.id.signin);
-        sendlink = (Button)findViewById(R.id.sendlink_btn);
-        mStatusText = (TextView)findViewById(R.id.status);
+        sendlink = (Button) findViewById(R.id.sendlink_btn);
+
+        //change color of EditText
+        emailfield.getBackground().mutate().setColorFilter(getResources().getColor(R.color.mywhite), PorterDuff.Mode.SRC_ATOP);
+
 
         // Check if the Intent that started the Activity contains an email sign-in link. -> Update UI
-         checkIntent(getIntent());
+        checkIntent(getIntent());
 
         // Restore the "pending" email address -> if there is one
         if (savedInstanceState != null) {
@@ -82,16 +91,15 @@ public class Login extends AppCompatActivity {
         }
 
 
-
-
-
-
-
         //Send link clicked
         sendlink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                    onSendLinkClicked();
+                //checks if E-Mail is from FH
+                if(!emailfield.getText().toString().contains("student.fh-kiel.de")){
+                    emailfield.setError("Bitte FH-Kiel E-Mail nutzen.");
+                }else{
+                onSendLinkClicked();}
             }
         });
 
@@ -101,36 +109,18 @@ public class Login extends AppCompatActivity {
             public void onClick(View v) {
                 onSignInClicked();
 
-
             }
         });
-
-        //sign out button clicked
-        msign_out_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mAuth.signOut();
-            }
-        });
-
-
-
-
 
 
     }
 
 
-
-
     @Override
     public void onStart() {
         super.onStart();
-        if(mAuth.getCurrentUser()!=null) {
-            mStatusText.setText(mAuth.getCurrentUser().getEmail());
-        }
 
-
+        mAuth.signOut();
 
 
     }
@@ -180,15 +170,18 @@ public class Login extends AppCompatActivity {
                 .build();
 
 
+        // hideKeyboard(mEmailField);
+        showProgressDialog();
 
-       // hideKeyboard(mEmailField);
-        // showProgressDialog();
+
 
         mAuth.sendSignInLinkToEmail(email, settings)
                 .addOnCompleteListener(new OnCompleteListener<Void>() {
+
+
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                       // hideProgressDialog();
+                        hideProgressDialog();
 
                         if (task.isSuccessful()) {
                             Log.d(TAG, "Link sent");
@@ -199,9 +192,10 @@ public class Login extends AppCompatActivity {
                         } else {
                             Exception e = task.getException();
                             Log.w(TAG, "Could not send link", e);
+
                             showSnackbar("Link konnte nicht verschickt werden.");
 
-                            if (e instanceof FirebaseAuthInvalidCredentialsException) {
+                            if (e instanceof FirebaseAuthInvalidCredentialsException ) {
                                 emailfield.setError("Ungültige E-Mail Adresse");
                             }
                         }
@@ -211,23 +205,23 @@ public class Login extends AppCompatActivity {
 
     /**
      * Saves Mail locally to shared Preferences
+     *
      * @param mail Mail-Adress
      */
-    private void saveEmail(String mail){
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME,MODE_PRIVATE);
+    private void saveEmail(String mail) {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(SHARED_PREFERENCES_KEY,mail);
+        editor.putString(SHARED_PREFERENCES_KEY, mail);
         editor.commit();
     }
 
     /**
-     *
      * @return Mail, or null if not existing
      */
-    private String getMail(){
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME,MODE_PRIVATE);
-        return sharedPreferences.getString(SHARED_PREFERENCES_KEY,null);
-            }
+    private String getMail() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME, MODE_PRIVATE);
+        return sharedPreferences.getString(SHARED_PREFERENCES_KEY, null);
+    }
 
     private void showSnackbar(String message) {
         Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT).show();
@@ -245,7 +239,6 @@ public class Login extends AppCompatActivity {
     }
 
 
-
     /**
      * Check to see if the Intent has an email link, and if so set up the UI accordingly.
      * This can be called from either onCreate or onNewIntent, depending on how the Activity
@@ -256,21 +249,18 @@ public class Login extends AppCompatActivity {
             mEmailLink = intent.getData().toString();
 
 
-
             //gets Mail from Shared Preferences
-            if(getMail()!=null){
+            if (getMail() != null) {
                 emailfield.setText(getMail());
-            }else{
-                mStatusText.setText(R.string.status_link_found);
             }
             sendlink.setEnabled(false);
             sign_in_btn.setEnabled(true);
         } else {
-            mStatusText.setText(R.string.status_email_not_sent);
+
             sendlink.setEnabled(true);
             sign_in_btn.setEnabled(false);
         }
-        if(checkUserLoggedIn()){
+        if (checkUserLoggedIn()) {
             sendlink.setEnabled(false);
             sign_in_btn.setEnabled(false);
         }
@@ -300,25 +290,24 @@ public class Login extends AppCompatActivity {
         Log.d(TAG, "signInWithLink:" + link);
 
         //hideKeyboard(mEmailField);
-        //showProgressDialog();
+        showProgressDialog();
 
         mAuth.signInWithEmailLink(email, link)
                 .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
-                        //hideProgressDialog();
+                        hideProgressDialog();
                         mPendingEmail = null;
 
                         if (task.isSuccessful()) {
                             Log.d(TAG, "signInWithEmailLink:success");
                             AuthResult result = task.getResult();
-                            showSnackbar("Login erfolgreich.");
-                            Intent intent = new Intent(Login.this,MainActivity.class);
-                            startActivity(intent);
+
+                            startMain();
 
 
                             emailfield.setText(null);
-                           // updateUI(task.getResult().getUser());
+                            // updateUI(task.getResult().getUser());
                         } else {
                             Log.w(TAG, "signInWithEmailLink:failure", task.getException());
                             //updateUI(null);
@@ -333,18 +322,34 @@ public class Login extends AppCompatActivity {
                 });
     }
 
-    private Boolean checkUserLoggedIn(){
-        if(mAuth.getCurrentUser()!=null){
+    private Boolean checkUserLoggedIn() {
+        if (mAuth.getCurrentUser() != null) {
             return true;
-        }else{
+        } else {
             return false;
         }
     }
 
+    public void showProgressDialog() {
+        if (mProgressDialog == null) {
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage(getString(R.string.loading));
+            mProgressDialog.setIndeterminate(true);
+        }
 
+        mProgressDialog.show();
+    }
 
+    public void hideProgressDialog() {
+        if (mProgressDialog != null && mProgressDialog.isShowing()) {
+            mProgressDialog.dismiss();
+        }
+    }
 
-
+    public void startMain() {
+        Intent intent = new Intent(Login.this, MainActivity.class);
+        startActivity(intent);
+    }
 
 
 }
