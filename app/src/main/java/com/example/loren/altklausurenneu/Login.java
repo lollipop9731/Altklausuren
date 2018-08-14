@@ -1,6 +1,7 @@
 package com.example.loren.altklausurenneu;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -38,12 +39,15 @@ public class Login extends AppCompatActivity {
     private String mEmailLink;
     private TextView mStatusText;
 
-    private EditText emailfield, password;
-    Button sign_in_btn, sign_out_btn,sendlink;
+    private EditText emailfield;
+    Button sign_in_btn, msign_out_btn,sendlink;
     String mPendingEmail;
+    String loginMail;
 
 
     private static final String KEY_PENDING_EMAIL = "key_pending_email";
+    private static final String SHARED_PREFERENCES_NAME = "MAILLOCALLY";
+    private static final String SHARED_PREFERENCES_KEY = "SharedKEY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,12 +67,12 @@ public class Login extends AppCompatActivity {
 
         //UI Reference
         emailfield = (EditText) findViewById(R.id.email);
-        password = (EditText) findViewById(R.id.pw);
+        msign_out_btn = (Button)findViewById(R.id.signout);
         sign_in_btn = (Button) findViewById(R.id.signin);
         sendlink = (Button)findViewById(R.id.sendlink_btn);
         mStatusText = (TextView)findViewById(R.id.status);
 
-        // Check if the Intent that started the Activity contains an email sign-in link.
+        // Check if the Intent that started the Activity contains an email sign-in link. -> Update UI
          checkIntent(getIntent());
 
         // Restore the "pending" email address -> if there is one
@@ -83,7 +87,7 @@ public class Login extends AppCompatActivity {
 
 
 
-        //Test signin only with emailfield without password
+        //Send link clicked
         sendlink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -91,14 +95,21 @@ public class Login extends AppCompatActivity {
             }
         });
 
-        //sign in clicked
+        //On Sign In clicked
         sign_in_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showSnackbar("Klogin");
                 onSignInClicked();
 
 
+            }
+        });
+
+        //sign out button clicked
+        msign_out_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAuth.signOut();
             }
         });
 
@@ -119,7 +130,9 @@ public class Login extends AppCompatActivity {
             mStatusText.setText(mAuth.getCurrentUser().getEmail());
         }
 
-        //mAuth.addAuthStateListener(mAuthListener);
+
+
+
     }
 
     @Override
@@ -138,9 +151,7 @@ public class Login extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
-        if (mAuthListener != null) {
-            mAuth.removeAuthStateListener(mAuthListener);
-        }
+
     }
 
 
@@ -183,6 +194,7 @@ public class Login extends AppCompatActivity {
                             Log.d(TAG, "Link sent");
 
                             mPendingEmail = email;
+                            saveEmail(email);
                             showSnackbar("Link verschickt, bitte überprüfe deinen Posteingang!");
                         } else {
                             Exception e = task.getException();
@@ -190,26 +202,49 @@ public class Login extends AppCompatActivity {
                             showSnackbar("Link konnte nicht verschickt werden.");
 
                             if (e instanceof FirebaseAuthInvalidCredentialsException) {
-                                emailfield.setError("Invalid emailfield address.");
+                                emailfield.setError("Ungültige E-Mail Adresse");
                             }
                         }
                     }
                 });
     }
 
+    /**
+     * Saves Mail locally to shared Preferences
+     * @param mail Mail-Adress
+     */
+    private void saveEmail(String mail){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME,MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putString(SHARED_PREFERENCES_KEY,mail);
+        editor.commit();
+    }
+
+    /**
+     *
+     * @return Mail, or null if not existing
+     */
+    private String getMail(){
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARED_PREFERENCES_NAME,MODE_PRIVATE);
+        return sharedPreferences.getString(SHARED_PREFERENCES_KEY,null);
+            }
+
     private void showSnackbar(String message) {
         Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT).show();
     }
 
     private void onSignInClicked() {
-        String email = emailfield.getText().toString();
-        if (TextUtils.isEmpty(email)) {
+
+        loginMail = emailfield.getText().toString();
+        if (TextUtils.isEmpty(loginMail)) {
             emailfield.setError("Bitte Feld ausfüllen.");
             return;
         }
 
-        signInWithEmailLink(email, mEmailLink);
+        signInWithEmailLink(loginMail, mEmailLink);
     }
+
+
 
     /**
      * Check to see if the Intent has an email link, and if so set up the UI accordingly.
@@ -220,14 +255,27 @@ public class Login extends AppCompatActivity {
         if (intentHasEmailLink(intent)) {
             mEmailLink = intent.getData().toString();
 
-            mStatusText.setText(R.string.status_link_found);
+
+
+            //gets Mail from Shared Preferences
+            if(getMail()!=null){
+                emailfield.setText(getMail());
+            }else{
+                mStatusText.setText(R.string.status_link_found);
+            }
             sendlink.setEnabled(false);
-            //sign_in_btn.setEnabled(true);
+            sign_in_btn.setEnabled(true);
         } else {
             mStatusText.setText(R.string.status_email_not_sent);
             sendlink.setEnabled(true);
-            //sign_in_btn.setEnabled(false);
+            sign_in_btn.setEnabled(false);
         }
+        if(checkUserLoggedIn()){
+            sendlink.setEnabled(false);
+            sign_in_btn.setEnabled(false);
+        }
+
+
     }
 
     /**
@@ -263,7 +311,10 @@ public class Login extends AppCompatActivity {
 
                         if (task.isSuccessful()) {
                             Log.d(TAG, "signInWithEmailLink:success");
-                            Toast.makeText(getApplicationContext(),"Du bist drrrrinnn",Toast.LENGTH_LONG).show();
+                            AuthResult result = task.getResult();
+                            showSnackbar("Login erfolgreich.");
+                            Intent intent = new Intent(Login.this,MainActivity.class);
+                            startActivity(intent);
 
 
                             emailfield.setText(null);
@@ -272,7 +323,7 @@ public class Login extends AppCompatActivity {
                             Log.w(TAG, "signInWithEmailLink:failure", task.getException());
                             //updateUI(null);
 
-                            Toast.makeText(getApplicationContext(),"Verkackt",Toast.LENGTH_LONG).show();
+                            showSnackbar("Ungültige E-Mail.");
 
                             if (task.getException() instanceof FirebaseAuthActionCodeException) {
                                 showSnackbar("Invalid or expired sign-in link.");
@@ -280,6 +331,14 @@ public class Login extends AppCompatActivity {
                         }
                     }
                 });
+    }
+
+    private Boolean checkUserLoggedIn(){
+        if(mAuth.getCurrentUser()!=null){
+            return true;
+        }else{
+            return false;
+        }
     }
 
 

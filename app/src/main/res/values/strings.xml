@@ -84,7 +84,7 @@
 
     <string name="passwordless_status_fmt">Email User: %1$s (verified: %2$b)</string>
     <string name="passwordless_title_text">Passwordless Sign In</string>
-    <string name="status_email_not_sent">Send link to your email to get started.</string>
+    <string name="status_email_not_sent">Sende einen Link an deine FH-Mail um loszulegen!</string>
     <string name="status_email_sent">Link sent, check your email to continue.</string>
     <string name="status_link_found">Link received, enter email to sign in.</string>
 
