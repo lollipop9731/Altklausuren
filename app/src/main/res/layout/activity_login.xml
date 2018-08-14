@@ -25,34 +25,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <EditText
-        android:id="@+id/pw"
-        android:layout_width="250dp"
-        android:layout_height="wrap_content"
-        android:drawableLeft="@drawable/ic_lock_outline_white_24dp"
-        android:drawablePadding="10dp"
-        android:ems="10"
-        android:hint="@string/hint_passwort"
-        android:inputType="textPersonName"
-        android:password="true"
-        android:textColor="@android:color/white"
-        android:textColorHint="@color/whitetrans"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/email" />
-
     <Button
         android:id="@+id/signin"
         android:layout_width="250dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
         android:background="@android:color/white"
         android:text="Login"
         android:textColor="@color/colorPrimary"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pw" />
+        tools:layout_editor_absoluteY="487dp" />
 
     <ImageView
         android:id="@+id/imageView2"
@@ -63,5 +46,31 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/logo" />
+
+    <Button
+        android:id="@+id/sendlink_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Link senden"
+        tools:layout_editor_absoluteX="50dp"
+        tools:layout_editor_absoluteY="276dp" />
+
+    <TextView
+        android:id="@+id/status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginRight="8dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/signout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Button"
+        tools:layout_editor_absoluteX="43dp"
+        tools:layout_editor_absoluteY="27dp" />
 
 </android.support.constraint.ConstraintLayout>
