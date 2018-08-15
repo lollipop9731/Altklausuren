@@ -95,11 +95,8 @@ public class Login extends AppCompatActivity {
         sendlink.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //checks if E-Mail is from FH
-                if(!emailfield.getText().toString().contains("student.fh-kiel.de")){
-                    emailfield.setError("Bitte FH-Kiel E-Mail nutzen.");
-                }else{
-                onSendLinkClicked();}
+
+                onSendLinkClicked();
             }
         });
 
@@ -120,7 +117,7 @@ public class Login extends AppCompatActivity {
     public void onStart() {
         super.onStart();
 
-        mAuth.signOut();
+
 
 
     }
@@ -155,6 +152,17 @@ public class Login extends AppCompatActivity {
             emailfield.setError("Bitte Feld ausfüllen.");
             return;
         }
+
+        if(!emailstring.contains("@")){
+            emailfield.setError("Ungültige E-Mail");
+            return;
+        }
+
+        if(!emailstring.contains("student.fh-kiel.de")){
+            emailfield.setError("Bitte FH-Kiel E-Mail nutzen.");
+            return;
+        }
+
 
         sendSignInLink(emailstring);
     }
