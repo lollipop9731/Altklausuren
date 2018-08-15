@@ -10,7 +10,7 @@
         />
 
     <item
-        android:title="Modultipps hochladen"
+        android:title="Auf DB schreiben"
         android:icon="@drawable/ic_baseline_highlight_24px"
         android:id="@+id/menu_uploadtip"
         android:orderInCategory="0"

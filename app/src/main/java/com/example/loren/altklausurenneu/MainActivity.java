@@ -1,8 +1,11 @@
 package com.example.loren.altklausurenneu;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.internal.NavigationMenu;
@@ -26,9 +29,25 @@ import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -42,7 +61,14 @@ public class MainActivity extends AppCompatActivity
     FabSpeedDial fabSpeedDial;
 
     private static final  String TAG = "MainActivity";
+    //code for ReadFile
+    private static final int READ_REQUEST_CODE = 42;
     private FirebaseAuth mAuth;
+    private FirebaseStorage firebaseStorage;
+    private StorageReference storageRef;
+    private UploadTask uploadTask;
+    private DatabaseReference mDatabase;
+    ExamListAdapter arrayAdapter;
 
 
     @Override
@@ -52,7 +78,14 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        //get current user
         mAuth = FirebaseAuth.getInstance();
+
+        //get CloudStorage
+        firebaseStorage = FirebaseStorage.getInstance();
+        // Create a storage reference from our app
+        storageRef = firebaseStorage.getReference();
+        mDatabase = FirebaseDatabase.getInstance().getReference("exams");
 
 
 
@@ -83,6 +116,15 @@ public class MainActivity extends AppCompatActivity
             //handle clicks on miniFab here
             public boolean onMenuItemSelected(MenuItem menuItem) {
                 //Action here
+               switch(menuItem.getItemId()){
+                   case R.id.menu_upload:
+                       FileSearch();
+                       break;
+                   case R.id.menu_uploadtip:
+                        writeNewExam("442","Mathematische Grundlagen 2","WS 5","Probeklausur");
+                       break;
+               }
+
                 return true;
             }
 
@@ -95,10 +137,10 @@ public class MainActivity extends AppCompatActivity
 
 
         //Exams for example
-        Exam exam1 = new Exam("Mathematische Grundlagen 1", "SS 18 Probeklausur");
-        Exam exam2 = new Exam("Mathematische Grundlagen 2", "SS 17 1. Zeitraum");
-        Exam exam3 = new Exam("Mathematische Grundlagen 1", "WS 17/18 2. Zeitraum");
-        Exam exam4 = new Exam("Mathematische Grundlagen 2", "SS 18 Gedächtnisprotokoll");
+        final Exam exam1 = new Exam("Mathematische Grundlagen 1", "SS 18","Probeklausur");
+        Exam exam2 = new Exam("Mathematische Grundlagen 2", "SS 17" ,"1. Zeitraum");
+        Exam exam3 = new Exam("Mathematische Grundlagen 1", "WS 17/18","2. Zeitraum");
+        Exam exam4 = new Exam("Mathematische Grundlagen 2", "SS 18","Gedächtnisprotokoll");
 
         // ArrayList to keep Exams
         final ArrayList<Exam> exams = new ArrayList<>();
@@ -107,10 +149,10 @@ public class MainActivity extends AppCompatActivity
         exams.add(exam3);
         exams.add(exam4);
 
-        // Array Adapter for Custom ListView
-        ExamListAdapter arrayAdapter = new ExamListAdapter(this,    exams );
+
         listViewExam = (ListView)findViewById(R.id.list_exams);
-        listViewExam.setAdapter(arrayAdapter);
+
+
 
 
 
@@ -124,6 +166,43 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        //listen for changes of data and update UI
+        ValueEventListener valueEventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                // Get Exam object
+                // todo and use the values to update the UI
+                exams.clear();
+
+                //get all Exams
+                for(DataSnapshot snapshot : dataSnapshot.getChildren()){
+                    Exam exam = snapshot.getValue(Exam.class);
+
+                        Log.d(TAG, "User: "+ exam.getName());
+
+
+                    //add to list
+                    exams.add(exam);
+
+                }
+                // Array Adapter for Custom ListView
+                arrayAdapter = new ExamListAdapter(MainActivity.this,    exams );
+                listViewExam.setAdapter(arrayAdapter);
+
+
+                showSnackbar("NEue daten");
+            }
+
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+            //getting exam failed -> log
+                Log.d(TAG, "loadExam failed", databaseError.toException());
+            }
+        };
+
+        mDatabase.addValueEventListener(valueEventListener);
+
 
 
 
@@ -132,6 +211,26 @@ public class MainActivity extends AppCompatActivity
 
 
     }
+
+    /**
+     * Show Data from Firebase DB when new Data -> return chosen exam
+     * @param dataSnapshot
+     */
+    private Exam showData(DataSnapshot dataSnapshot,String modulname, String id) {
+        Exam exam = new Exam();
+        for(DataSnapshot ds : dataSnapshot.getChildren()){
+            exam.setName(ds.child(modulname).child(id).getValue(Exam.class).getName());
+            exam.setCategory(ds.child(modulname).child(id).getValue(Exam.class).getCategory());
+            exam.setSemester(ds.child(modulname).child(id).getValue(Exam.class).getSemester());
+
+            Log.d(TAG,"Name: " + exam.getName());
+            Log.d(TAG,"Category"+ exam.getCategory());
+            Log.d(TAG,"Semester: "+ exam.getSemester());
+        }
+        return exam;
+    }
+
+
 
 
     @Override
@@ -197,9 +296,139 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
+    /**
+     * Easy Method to show snackbar
+     * @param message to be shown
+     */
     private void showSnackbar(String message) {
         Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT).show();
     }
 
+    /**
+     * Upload byte[] to Firebase Cloud Storage
+     * @param bytes file in bytes[[]
+     * @param filename path of the file
+     */
+    private void uploadLocalFileFromPhone(byte[] bytes, final String filename){
 
+
+        StorageReference klausurReference = storageRef.child(filename);
+        uploadTask = klausurReference.putBytes(bytes);
+
+
+        //Register if upload fails
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                //handle failed uploads
+                showSnackbar("Upload fehlgeschlagen");
+                Log.d(TAG,"Upload fehgeschlagen, Path: "+filename);
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                //handle successful uploads
+                showSnackbar("Upload erfolgreich!");
+                Log.d(TAG,"Upload erfolgreich: " + filename);
+            }
+        });
+
+
+    }
+
+    /**
+     * Opens the file explorer to choose the file to upload
+     */
+    private void FileSearch(){
+
+        //choose a file
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+
+        //Filter that only openable files are shown
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+        String[] mimeTypes = {"image/jpeg","application/pdf"};
+
+        //sets the type first to all
+        intent.setType("*/*");
+        //apply new mimyTypes API ab 19, maybe other solution
+        //todo new soltion here to support api <19
+        intent.putExtra(Intent.EXTRA_MIME_TYPES,mimeTypes);
+
+        startActivityForResult(intent,READ_REQUEST_CODE);
+
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        //check if request code is correct
+        if(requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK){
+            //return intent contains a URI
+            Uri uri = null;
+            if(data !=null){
+                uri = data.getData();
+                //get path from selected file
+                String filename = uri.getLastPathSegment();
+                Log.d(TAG,"Uri: " + uri.toString());
+
+                //convert to byte[] and upload to cloud storage
+                try{
+
+                    InputStream inputStream = getContentResolver().openInputStream(uri);
+                    try{
+                        byte[] bytes = getBytes(inputStream);
+                        Log.d(TAG,"Erfolgreich zu Bytes gewandelt.");
+                        uploadLocalFileFromPhone(bytes,filename);
+
+                    }catch (IOException e){
+                        //do nothing
+                    }
+                }catch (FileNotFoundException e){
+                    Log.d(TAG," File not found, cannot convert to BYTE []");
+                    showSnackbar("File not found");
+                }
+
+
+            }
+        }
+    }
+
+    /**
+     *
+     * @param inputStream
+     * @return
+     * @throws IOException
+     */
+    public byte[] getBytes(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        int bufferSize = 1024;
+        byte[] buffer = new byte[bufferSize];
+
+        int len = 0;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
+        }
+        return byteBuffer.toByteArray();
+    }
+
+
+    public void writeNewExam(String examid, String name, String semester, String category) {
+        Exam exam = new Exam(name, semester, category);
+        mDatabase.child("exams").child(examid).setValue(exam)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.d(TAG, "erfolgreich beschrieben.");
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG, "Upload fehlgeschlagen:" + e.getMessage());
+            }
+        });
+
+
+    }
 }

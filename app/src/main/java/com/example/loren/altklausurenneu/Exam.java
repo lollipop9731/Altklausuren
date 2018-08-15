@@ -3,10 +3,26 @@ package com.example.loren.altklausurenneu;
 public class Exam {
     private String name;
     private String semester;
+    private String category;
 
-    public Exam(String name, String semester) {
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Exam(String name, String semester, String category) {
         this.name = name;
         this.semester = semester;
+        this.category = category;
+
+
+    }
+
+    //default constructor
+    public Exam() {
     }
 
     public String getName() {

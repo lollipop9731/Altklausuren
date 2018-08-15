@@ -32,7 +32,7 @@ public class ExamListAdapter extends ArrayAdapter<Exam> {
         String semester = getItem(position).getSemester();
 
         //Create Exam objet with the information
-        Exam exam = new Exam(name,semester);
+        Exam exam = new Exam(name,semester,"Probeklausur");
 
         //inflate Layout, set View for custom Listview
         LayoutInflater layoutInflater = LayoutInflater.from(getContext());
