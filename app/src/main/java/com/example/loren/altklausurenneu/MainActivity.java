@@ -1,7 +1,10 @@
 package com.example.loren.altklausurenneu;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,6 +15,7 @@ import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -24,6 +28,7 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
@@ -69,6 +74,7 @@ public class MainActivity extends AppCompatActivity
     private UploadTask uploadTask;
     private DatabaseReference mDatabase;
     ExamListAdapter arrayAdapter;
+    private ArrayList<Exam> exams;
 
 
     @Override
@@ -85,7 +91,10 @@ public class MainActivity extends AppCompatActivity
         firebaseStorage = FirebaseStorage.getInstance();
         // Create a storage reference from our app
         storageRef = firebaseStorage.getReference();
+
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         mDatabase = FirebaseDatabase.getInstance().getReference("exams");
+
 
 
 
@@ -121,7 +130,8 @@ public class MainActivity extends AppCompatActivity
                        FileSearch();
                        break;
                    case R.id.menu_uploadtip:
-                        writeNewExam("442","Mathematische Grundlagen 2","WS 5","Probeklausur");
+                        writeNewExam("3","Mathematische Grundlagen 1","SS 2017","Gedächtnisprotokoll");
+                        DialogNewExam();
                        break;
                }
 
@@ -135,102 +145,72 @@ public class MainActivity extends AppCompatActivity
         });
 
 
-
-        //Exams for example
-        final Exam exam1 = new Exam("Mathematische Grundlagen 1", "SS 18","Probeklausur");
-        Exam exam2 = new Exam("Mathematische Grundlagen 2", "SS 17" ,"1. Zeitraum");
-        Exam exam3 = new Exam("Mathematische Grundlagen 1", "WS 17/18","2. Zeitraum");
-        Exam exam4 = new Exam("Mathematische Grundlagen 2", "SS 18","Gedächtnisprotokoll");
-
-        // ArrayList to keep Exams
-        final ArrayList<Exam> exams = new ArrayList<>();
-        exams.add(exam1);
-        exams.add(exam2);
-        exams.add(exam3);
-        exams.add(exam4);
+        listViewExam = (ListView) findViewById(R.id.list_exams);
 
 
-        listViewExam = (ListView)findViewById(R.id.list_exams);
-
-
+        mDatabase.addValueEventListener(getDataValueEvent());
 
 
 
         listViewExam.setOnItemClickListener(
                 new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String name = exams.get(position).getName();
-                Intent intent = new Intent(MainActivity.this,WebViewclass.class);
-                startActivity(intent);
-            }
-        });
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        String name = exams.get(position).getName();
+                        Intent intent = new Intent(MainActivity.this,WebViewclass.class);
+                        startActivity(intent);
+                    }
+                });
 
+
+
+
+
+
+
+    }
+
+
+    /**
+     * Gets all Exams and set them to ListView with adapter
+     * @return
+     */
+    private ValueEventListener getDataValueEvent(){
         //listen for changes of data and update UI
         ValueEventListener valueEventListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                // Get Exam object
-                // todo and use the values to update the UI
-                exams.clear();
 
-                //get all Exams
-                for(DataSnapshot snapshot : dataSnapshot.getChildren()){
-                    Exam exam = snapshot.getValue(Exam.class);
+                // ArrayList to keep Exams
+                exams = new ArrayList<Exam>();
+                if(dataSnapshot.exists()){
+                    //get all Exams
+                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                        Exam exam;
+                        exam = snapshot.getValue(Exam.class);
+                        Log.d(TAG, "User: " + exam.getName());
+                        //add to list
+                        exams.add(exam);
 
-                        Log.d(TAG, "User: "+ exam.getName());
-
-
-                    //add to list
-                    exams.add(exam);
-
+                    }
                 }
+
                 // Array Adapter for Custom ListView
-                arrayAdapter = new ExamListAdapter(MainActivity.this,    exams );
+                arrayAdapter = new ExamListAdapter(MainActivity.this, exams);
                 listViewExam.setAdapter(arrayAdapter);
 
-
-                showSnackbar("NEue daten");
             }
-
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-            //getting exam failed -> log
+                //getting exam failed -> log
                 Log.d(TAG, "loadExam failed", databaseError.toException());
             }
         };
 
-        mDatabase.addValueEventListener(valueEventListener);
-
-
-
-
-
-
-
+        return valueEventListener;
 
     }
-
-    /**
-     * Show Data from Firebase DB when new Data -> return chosen exam
-     * @param dataSnapshot
-     */
-    private Exam showData(DataSnapshot dataSnapshot,String modulname, String id) {
-        Exam exam = new Exam();
-        for(DataSnapshot ds : dataSnapshot.getChildren()){
-            exam.setName(ds.child(modulname).child(id).getValue(Exam.class).getName());
-            exam.setCategory(ds.child(modulname).child(id).getValue(Exam.class).getCategory());
-            exam.setSemester(ds.child(modulname).child(id).getValue(Exam.class).getSemester());
-
-            Log.d(TAG,"Name: " + exam.getName());
-            Log.d(TAG,"Category"+ exam.getCategory());
-            Log.d(TAG,"Semester: "+ exam.getSemester());
-        }
-        return exam;
-    }
-
-
 
 
     @Override
@@ -416,7 +396,7 @@ public class MainActivity extends AppCompatActivity
 
     public void writeNewExam(String examid, String name, String semester, String category) {
         Exam exam = new Exam(name, semester, category);
-        mDatabase.child("exams").child(examid).setValue(exam)
+        mDatabase.child(examid).setValue(exam)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
                     public void onSuccess(Void aVoid) {
@@ -429,6 +409,47 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+
+    }
+
+    public void DialogNewExam(){
+        //todo Dialog schöner machen
+        final AlertDialog dialog = new AlertDialog.Builder(this).create();
+        LayoutInflater layoutInflater = this.getLayoutInflater();
+        View dialogview = layoutInflater.inflate(R.layout.dialogfragment_newexam,null);
+
+        final EditText name = (EditText)dialogview.findViewById(R.id.dialog_exam_name);
+        final EditText category = (EditText)dialogview.findViewById(R.id.dialog_exam_category);
+        final EditText semester = (EditText)dialogview.findViewById(R.id.dialog_exam_semester);
+        final EditText id = (EditText)dialogview.findViewById(R.id.dialog_exam_id);
+
+
+        dialog.setButton(Dialog.BUTTON_NEGATIVE, "Abbrechen", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        dialog.setButton(Dialog.BUTTON_POSITIVE, "Hinzufügen", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(!name.getText().toString().equals("")&&!category.getText().toString().equals("")&&!semester.getText().toString().equals("")&&!id.getText().toString().equals("")){
+                    writeNewExam(id.getText().toString(),name.getText().toString(),semester.getText().toString(),category.getText().toString());
+                }else{
+                    //todo Error setzen für EditText
+                    showSnackbar("Alle Felder ausfüllen");
+                }
+
+
+
+            }
+        });
+
+        dialog.setCancelable(true);
+
+        dialog.setView(dialogview);
+        dialog.show();
 
     }
 }
