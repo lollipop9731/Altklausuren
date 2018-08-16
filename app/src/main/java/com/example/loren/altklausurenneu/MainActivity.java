@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
@@ -15,6 +16,7 @@ import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -31,6 +33,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -73,16 +76,23 @@ public class MainActivity extends AppCompatActivity
     private StorageReference storageRef;
     private UploadTask uploadTask;
     private DatabaseReference mDatabase;
+    private static FirebaseDatabase database;
     ExamListAdapter arrayAdapter;
     private ArrayList<Exam> exams;
+    private String currentsemester;
+    private String currentcategorie;
+    AdapterView.OnItemSelectedListener onItemSelectedListener;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        getDatabase();
 
         //get current user
         mAuth = FirebaseAuth.getInstance();
@@ -92,8 +102,10 @@ public class MainActivity extends AppCompatActivity
         // Create a storage reference from our app
         storageRef = firebaseStorage.getReference();
 
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
         mDatabase = FirebaseDatabase.getInstance().getReference("exams");
+
+
+
 
 
 
@@ -413,16 +425,58 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void DialogNewExam(){
-        //todo Dialog schöner machen
-        final AlertDialog dialog = new AlertDialog.Builder(this).create();
+        //todo Dialog schöner machen -> add possibility to choose Modul
+        final AlertDialog dialog = new AlertDialog.Builder(this, R.style.AlertDialogCustom).create();
         LayoutInflater layoutInflater = this.getLayoutInflater();
-        View dialogview = layoutInflater.inflate(R.layout.dialogfragment_newexam,null);
+        View dialogview = layoutInflater.inflate(R.layout.dialogfragment_newexam, null);
 
-        final EditText name = (EditText)dialogview.findViewById(R.id.dialog_exam_name);
-        final EditText category = (EditText)dialogview.findViewById(R.id.dialog_exam_category);
-        final EditText semester = (EditText)dialogview.findViewById(R.id.dialog_exam_semester);
-        final EditText id = (EditText)dialogview.findViewById(R.id.dialog_exam_id);
+        //identify spinner
+        Spinner spinner_semester = (Spinner) dialogview.findViewById(R.id.spinner_semester);
+        Spinner spinner_categories = (Spinner) dialogview.findViewById(R.id.spinner_category);
 
+        ArrayAdapter<CharSequence> adapter_semester = ArrayAdapter.createFromResource(this,
+                R.array.semester_array, android.R.layout.simple_spinner_item);
+
+        ArrayAdapter<CharSequence> adapter_category = ArrayAdapter.createFromResource(this,
+                R.array.category, android.R.layout.simple_spinner_item);
+
+        adapter_semester.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        adapter_category.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        // Apply the adapter to the spinner
+        spinner_categories.setAdapter(adapter_category);
+        spinner_semester.setAdapter(adapter_semester);
+
+        //todo make only one clicklistener, didnt work last time -> get id correct
+        spinner_categories.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                currentsemester = parent.getItemAtPosition(position).toString();
+                Log.d(TAG, "Current Categorie: " + currentsemester);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+        spinner_semester.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                currentsemester = parent.getItemAtPosition(position).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+
+        final EditText id = (EditText) dialogview.findViewById(R.id.dialog_exam_id);
+
+        dialog.setTitle("Details");
+        dialog.setCanceledOnTouchOutside(false);
 
         dialog.setButton(Dialog.BUTTON_NEGATIVE, "Abbrechen", new DialogInterface.OnClickListener() {
             @Override
@@ -434,11 +488,12 @@ public class MainActivity extends AppCompatActivity
         dialog.setButton(Dialog.BUTTON_POSITIVE, "Hinzufügen", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if(!name.getText().toString().equals("")&&!category.getText().toString().equals("")&&!semester.getText().toString().equals("")&&!id.getText().toString().equals("")){
-                    writeNewExam(id.getText().toString(),name.getText().toString(),semester.getText().toString(),category.getText().toString());
+                if(!id.getText().toString().equals("")){
+                    //todo get name from current open Modul
+                    //todo remove id, add autoincrement maybe?
+                    writeNewExam(id.getText().toString(),"Mathematische Grundlagen 2",currentsemester,currentcategorie);
                 }else{
-                    //todo Error setzen für EditText
-                    showSnackbar("Alle Felder ausfüllen");
+                    id.setError("Ausfüllen");
                 }
 
 
@@ -452,4 +507,17 @@ public class MainActivity extends AppCompatActivity
         dialog.show();
 
     }
+
+    public static FirebaseDatabase getDatabase() {
+        if ( database == null) {
+            database = FirebaseDatabase.getInstance();
+            database.setPersistenceEnabled(true);
+            // ...
+        }
+
+        return database;
+
+    }
+
+
 }

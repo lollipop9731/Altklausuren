@@ -98,4 +98,31 @@
 
     <string name="id_fmt">User ID: %s</string>
     <string name="email_fmt">Email: %s</string>
+
+
+    <string-array name="semester_array">
+        <item>SS 11</item>
+        <item>WS 11/12</item>
+        <item>SS 12</item>
+        <item>WS 12/13</item>
+        <item>SS 13</item>
+        <item>WS 13/14</item>
+        <item>SS 14</item>
+        <item>WS 14/15</item>
+        <item>SS 15</item>
+        <item>WS 15/16</item>
+        <item>SS 16</item>
+        <item>WS 16/17</item>
+        <item>SS 17</item>
+        <item>WS 17/18</item>
+        <item>SS 18</item>
+        <item>WS 18/19</item>
+    </string-array>
+
+    <string-array name="category">
+        <item>Gedächtnisprotokoll</item>
+        <item>Probeklausur</item>
+        <item>Klausur</item>
+        <item>Allgemeine Tipps</item>
+    </string-array>
 </resources>
