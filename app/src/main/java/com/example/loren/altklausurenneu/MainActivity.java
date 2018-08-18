@@ -3,6 +3,7 @@ package com.example.loren.altklausurenneu;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.DialogInterface;
@@ -142,8 +143,14 @@ public class MainActivity extends AppCompatActivity
                        FileSearch();
                        break;
                    case R.id.menu_uploadtip:
-                        writeNewExam("3","Mathematische Grundlagen 1","SS 2017","Gedächtnisprotokoll");
-                        DialogNewExam();
+                        NewExamDialog examDialog = DialogFactory.makeExamDialog(R.string.dialog_title,
+                                R.string.dialog_message,R.string.dialog_button,R.array.category,new NewExamDialog.ButtonDialogAction(){
+                                    @Override
+                                    public void onButtonClicked() {
+                                        Toast.makeText(getApplicationContext(),"hisd",Toast.LENGTH_SHORT).show();
+                                    }
+                                } );
+                       examDialog.show(getFragmentManager(),NewExamDialog.TAG);
                        break;
                }
 

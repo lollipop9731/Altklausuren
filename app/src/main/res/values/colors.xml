@@ -6,6 +6,7 @@
     <color name="color_complementary_yellow">#efe669</color>
     <color name="color_analogous_türkis">#5cb8db</color>
     <color name="mywhite">#ffffff</color>
+    <color name="grey_text">#424242</color>
     <!-- Colors for FAB-->
     <integer-array name="fab_menu_item_colors">
         <!-- A dark Holo shade of red -->

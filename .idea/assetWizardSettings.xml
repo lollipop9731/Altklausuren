@@ -66,9 +66,10 @@
                         </option>
                         <option name="values">
                           <map>
+                            <entry key="assetSourceType" value="FILE" />
                             <entry key="color" value="ffffff" />
-                            <entry key="outputName" value="ic_lock_outline_white_24dp" />
-                            <entry key="sourceFile" value="C:\Users\loren\OneDrive\Sonstiges\Altklausuren App\Ressourcen\SVG\baseline-highlight-24px.svg" />
+                            <entry key="outputName" value="ic_pdf" />
+                            <entry key="sourceFile" value="C:\Users\loren\OneDrive\Sonstiges\Altklausuren App\Ressourcen\SVG\pdf (1).svg" />
                           </map>
                         </option>
                       </PersistentState>
