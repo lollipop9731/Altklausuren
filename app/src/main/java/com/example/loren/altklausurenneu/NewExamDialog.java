@@ -23,6 +23,10 @@ import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.example.loren.altklausurenneu.Utils.WheelView;
+
+import java.util.Arrays;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -33,6 +37,7 @@ public class NewExamDialog extends DialogFragment {
 
     public static final String TAG = "OneButtonDialogTag";
 
+
     //find view by id with butterknife
     @BindView(R.id.dlg_one_button_iv_icon)
     ImageView ivDialogIcon;
@@ -40,14 +45,16 @@ public class NewExamDialog extends DialogFragment {
     @BindView(R.id.dlg_one_button_tv_title)
     TextView tvTitle;
 
-    @BindView(R.id.dlg_one_button_tv_message)
-    TextView tvMessage;
+
 
    @BindView(R.id.dlg_one_button_btn_ok)
    Button btnNeutral;
 
    @BindView(R.id.dlg_spinner_category)
     Spinner spiCategory;
+
+   @BindView(R.id.dlg_wheel)
+   WheelView wheelView;
 
     protected static final String ARG_BUTTON_TEXT = "ARG_BUTTON_TEXT";
     protected static final String ARG_COLOR_RESOURCE_ID = "ARG_COLOR_RESOURCE_ID";
@@ -56,6 +63,7 @@ public class NewExamDialog extends DialogFragment {
     protected static final String ARG_IMAGE_RESOURCE_ID = "ARG_IMAGE_RESOURCE_ID";
     protected static final String ARG_SPINNER = "SPINNER_CATEGORY";
     private static final double DIALOG_WINDOW_WIDTH = 0.85;
+
 
 
     private int getContentView() {
@@ -68,6 +76,8 @@ public class NewExamDialog extends DialogFragment {
     public void onStart() {
         super.onStart();
         setDialogWindowWidth(DIALOG_WINDOW_WIDTH);
+
+
     }
     private void setDialogWindowWidth(double width) {
         Window window = getDialog().getWindow();
@@ -87,7 +97,7 @@ public class NewExamDialog extends DialogFragment {
         super.onViewCreated(view, savedInstanceState);
 
         // get from bundle
-        //todo button new font family -> roboto light? Sans serif light?
+
         int titleres = getArguments().getInt(ARG_TITLE);
         int message = getArguments().getInt(ARG_MESSAGE);
         int buttontext = getArguments().getInt(ARG_BUTTON_TEXT);
@@ -101,7 +111,7 @@ public class NewExamDialog extends DialogFragment {
 
         tvTitle.setText(titleres);
         tvTitle.setTextColor(getResources().getColor(color));
-        tvMessage.setText(message);
+
         btnNeutral.setText(buttontext);
         ivDialogIcon.setImageResource(image);
         spiCategory.setAdapter(adapter);
@@ -112,9 +122,14 @@ public class NewExamDialog extends DialogFragment {
     @OnClick(R.id.dlg_one_button_btn_ok)
     public void onButtonClicked() {
         closeDialog();
+        //open interface
         if(mbuttonDialogAction != null) {
-            mbuttonDialogAction.onButtonClicked();
+
+            mbuttonDialogAction.onSelectedData(spiCategory.getSelectedItem().toString(),wheelView.getSeletedItem());
         }
+
+
+
     }
 
     public void closeDialog() {
@@ -130,7 +145,7 @@ public class NewExamDialog extends DialogFragment {
                 getActivity().findViewById(android.R.id.content).getWindowToken(), 0);
     }
 
-    public static NewExamDialog newInstance(@StringRes int title, @StringRes int message, @StringRes int buttontext,
+    public static NewExamDialog newInstance(@StringRes int title,  @StringRes int buttontext,
                                             @DrawableRes int imageResId, @ColorRes int color,
                                             @ArrayRes int categories, ButtonDialogAction buttonDialogAction){
 
@@ -141,7 +156,6 @@ public class NewExamDialog extends DialogFragment {
         //Supply the construction arguments for this fragment with a bundle
         Bundle args = new Bundle();
         args.putInt(ARG_TITLE, title);
-        args.putInt(ARG_MESSAGE, message);
         args.putInt(ARG_BUTTON_TEXT, buttontext);
         args.putInt(ARG_IMAGE_RESOURCE_ID, imageResId);
         args.putInt(ARG_COLOR_RESOURCE_ID, color);
@@ -166,13 +180,25 @@ public class NewExamDialog extends DialogFragment {
 
         getDialog().setCanceledOnTouchOutside(false);
 
+        wheelView.setOffset(1);
+        String[] semester = getResources().getStringArray(R.array.semester_array);
+        wheelView.setItems( Arrays.asList(semester));
+        wheelView.setSeletion(1);
+
+
+
         return view;
     }
 
 
+
+
     public interface ButtonDialogAction{
-        void onButtonClicked();
+
+        void onSelectedData(String category, String semester);
     }
+
+
 
 
 

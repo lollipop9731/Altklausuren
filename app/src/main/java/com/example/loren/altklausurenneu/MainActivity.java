@@ -1,24 +1,13 @@
 package com.example.loren.altklausurenneu;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
-import android.content.Context;
-import android.content.ContextWrapper;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.design.internal.NavigationMenu;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
-import android.view.ContextThemeWrapper;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -28,20 +17,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -53,13 +34,10 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
 
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
@@ -70,6 +48,10 @@ public class MainActivity extends AppCompatActivity
     FabSpeedDial fabSpeedDial;
 
     private static final  String TAG = "MainActivity";
+    private static final String DATABASE_CATEGORY = "category";
+    private static final String DATABASE_SEMESTER = "semester";
+    private static final String DATABASE_NAME = "name";
+
     //code for ReadFile
     private static final int READ_REQUEST_CODE = 42;
     private FirebaseAuth mAuth;
@@ -80,9 +62,10 @@ public class MainActivity extends AppCompatActivity
     private static FirebaseDatabase database;
     ExamListAdapter arrayAdapter;
     private ArrayList<Exam> exams;
-    private String currentsemester;
-    private String currentcategorie;
-    AdapterView.OnItemSelectedListener onItemSelectedListener;
+    private FirebaseMethods firebaseMethods;
+
+    private Exam exam;
+
 
 
     @Override
@@ -93,7 +76,12 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getDatabase();
+        exam = new Exam();
+
+
+       getDatabase();
+
+        firebaseMethods = new FirebaseMethods();
 
         //get current user
         mAuth = FirebaseAuth.getInstance();
@@ -104,11 +92,6 @@ public class MainActivity extends AppCompatActivity
         storageRef = firebaseStorage.getReference();
 
         mDatabase = FirebaseDatabase.getInstance().getReference("exams");
-
-
-
-
-
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -140,17 +123,11 @@ public class MainActivity extends AppCompatActivity
                 //Action here
                switch(menuItem.getItemId()){
                    case R.id.menu_upload:
+                       exam.setUploaded(false);
                        FileSearch();
                        break;
                    case R.id.menu_uploadtip:
-                        NewExamDialog examDialog = DialogFactory.makeExamDialog(R.string.dialog_title,
-                                R.string.dialog_message,R.string.dialog_button,R.array.category,new NewExamDialog.ButtonDialogAction(){
-                                    @Override
-                                    public void onButtonClicked() {
-                                        Toast.makeText(getApplicationContext(),"hisd",Toast.LENGTH_SHORT).show();
-                                    }
-                                } );
-                       examDialog.show(getFragmentManager(),NewExamDialog.TAG);
+                       showDialog();
                        break;
                }
 
@@ -311,7 +288,7 @@ public class MainActivity extends AppCompatActivity
     private void uploadLocalFileFromPhone(byte[] bytes, final String filename){
 
 
-        StorageReference klausurReference = storageRef.child(filename);
+        final StorageReference klausurReference = storageRef.child(filename);
         uploadTask = klausurReference.putBytes(bytes);
 
 
@@ -322,6 +299,7 @@ public class MainActivity extends AppCompatActivity
                 //handle failed uploads
                 showSnackbar("Upload fehlgeschlagen");
                 Log.d(TAG,"Upload fehgeschlagen, Path: "+filename);
+                exam.setUploaded(false);
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -329,8 +307,20 @@ public class MainActivity extends AppCompatActivity
                 //handle successful uploads
                 showSnackbar("Upload erfolgreich!");
                 Log.d(TAG,"Upload erfolgreich: " + filename);
+                //set filepath to current exam
+                exam.setFilepath(klausurReference.getDownloadUrl().toString());
+                //todo upload when user clicks and file is uploaded
+
+                //exam uploaded -> ready to upload to databas
+                exam.setUploaded(true);
+
+
+
+
             }
         });
+
+
 
 
     }
@@ -359,6 +349,12 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    /**
+     * Result from FileSearch
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
@@ -380,6 +376,10 @@ public class MainActivity extends AppCompatActivity
                         byte[] bytes = getBytes(inputStream);
                         Log.d(TAG,"Erfolgreich zu Bytes gewandelt.");
                         uploadLocalFileFromPhone(bytes,filename);
+                        showDialog();
+
+
+
 
                     }catch (IOException e){
                         //do nothing
@@ -393,6 +393,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
 
     /**
      *
@@ -412,111 +413,30 @@ public class MainActivity extends AppCompatActivity
         return byteBuffer.toByteArray();
     }
 
+    public void showDialog(){
+        final NewExamDialog examDialog = DialogFactory.makeExamDialog(R.string.dialog_title,
+                R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
 
-    public void writeNewExam(String examid, String name, String semester, String category) {
-        Exam exam = new Exam(name, semester, category);
-        mDatabase.child(examid).setValue(exam)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.d(TAG, "erfolgreich beschrieben.");
+                    public void onSelectedData(String category, String semester) {
+                        exam.setCategory(category);
+                        exam.setSemester(semester);
+
+                        //only upload to database, if file is stored to firebase storage
+                        if(exam.getUploaded()) {
+                            firebaseMethods.uploadNewExam("Mathe 1", exam.getSemester(), exam.getCategory(), exam.getUserid(), exam.getFilepath());
+                        }
                     }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.d(TAG, "Upload fehlgeschlagen:" + e.getMessage());
-            }
-        });
+                });
 
-
+        examDialog.show(getFragmentManager(),NewExamDialog.TAG);
     }
 
-    public void DialogNewExam(){
-        //todo Dialog schöner machen -> add possibility to choose Modul
-        final AlertDialog dialog = new AlertDialog.Builder(this, R.style.AlertDialogCustom).create();
-        LayoutInflater layoutInflater = this.getLayoutInflater();
-        View dialogview = layoutInflater.inflate(R.layout.dialogfragment_newexam, null);
-
-        //identify spinner
-        Spinner spinner_semester = (Spinner) dialogview.findViewById(R.id.spinner_semester);
-        Spinner spinner_categories = (Spinner) dialogview.findViewById(R.id.spinner_category);
-
-        ArrayAdapter<CharSequence> adapter_semester = ArrayAdapter.createFromResource(this,
-                R.array.semester_array, android.R.layout.simple_spinner_item);
-
-        ArrayAdapter<CharSequence> adapter_category = ArrayAdapter.createFromResource(this,
-                R.array.category, android.R.layout.simple_spinner_item);
-
-        adapter_semester.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        adapter_category.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // Apply the adapter to the spinner
-        spinner_categories.setAdapter(adapter_category);
-        spinner_semester.setAdapter(adapter_semester);
-
-        //todo make only one clicklistener, didnt work last time -> get id correct
-        spinner_categories.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                currentsemester = parent.getItemAtPosition(position).toString();
-                Log.d(TAG, "Current Categorie: " + currentsemester);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-        spinner_semester.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                currentsemester = parent.getItemAtPosition(position).toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
 
 
-        final EditText id = (EditText) dialogview.findViewById(R.id.dialog_exam_id);
-
-        dialog.setTitle("Details");
-        dialog.setCanceledOnTouchOutside(false);
-
-        dialog.setButton(Dialog.BUTTON_NEGATIVE, "Abbrechen", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-
-        dialog.setButton(Dialog.BUTTON_POSITIVE, "Hinzufügen", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if(!id.getText().toString().equals("")){
-                    //todo get name from current open Modul
-                    //todo remove id, add autoincrement maybe?
-                    writeNewExam(id.getText().toString(),"Mathematische Grundlagen 2",currentsemester,currentcategorie);
-                }else{
-                    id.setError("Ausfüllen");
-                }
-
-
-
-            }
-        });
-
-        dialog.setCancelable(true);
-
-        dialog.setView(dialogview);
-        dialog.show();
-
-    }
 
     public static FirebaseDatabase getDatabase() {
-        if ( database == null) {
+        if (database == null) {
             database = FirebaseDatabase.getInstance();
             database.setPersistenceEnabled(true);
             // ...
@@ -525,6 +445,7 @@ public class MainActivity extends AppCompatActivity
         return database;
 
     }
+
 
 
 }

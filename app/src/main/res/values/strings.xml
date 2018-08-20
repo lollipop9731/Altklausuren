@@ -101,27 +101,44 @@
 
     <!-- strings for newExamDialog -->
     <string name="dialog_title">Mathematische Grundlagen</string>
-    <string name="dialog_message">Klausurdetails bearbeiten.</string>
+    <string name="dialog_message">WS 18/19</string>
     <string name="dialog_button">Hinzufügen</string>
+    <string name="dialog_info">Bitte den Typ und das Semester hinzufügen.</string>
 
 
     <string-array name="semester_array">
-        <item>SS 11</item>
-        <item>WS 11/12</item>
-        <item>SS 12</item>
-        <item>WS 12/13</item>
-        <item>SS 13</item>
-        <item>WS 13/14</item>
-        <item>SS 14</item>
-        <item>WS 14/15</item>
-        <item>SS 15</item>
-        <item>WS 15/16</item>
-        <item>SS 16</item>
-        <item>WS 16/17</item>
-        <item>SS 17</item>
-        <item>WS 17/18</item>
-        <item>SS 18</item>
-        <item>WS 18/19</item>
+        <item>SS 2019</item>
+        <item>WS 2018/19</item>
+        <item>SS 2018</item>
+        <item>WS 2017/18</item>
+        <item>SS 2017</item>
+        <item>WS 2016/17</item>
+        <item>SS 2016</item>
+        <item>WS 2015/16</item>
+        <item>SS 2015</item>
+        <item>WS 2014/15</item>
+        <item>SS 2014</item>
+        <item>WS 2013/14</item>
+        <item>SS 2013</item>
+        <item>WS 2012/13</item>
+        <item>SS 2012</item>
+        <item>WS 2011/12</item>
+        <item>SS 2011</item>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </string-array>
 
     <string-array name="category">

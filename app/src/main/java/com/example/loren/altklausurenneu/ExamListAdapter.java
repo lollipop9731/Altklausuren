@@ -24,15 +24,17 @@ public class ExamListAdapter extends ArrayAdapter<Exam> {
 
     }
 
+
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         //get information
-        String name =getItem(position).getName();
+        String category =getItem(position).getCategory();
         String semester = getItem(position).getSemester();
 
         //Create Exam objet with the information
-        Exam exam = new Exam(name,semester,"Probeklausur");
+        //todo namen ändern nicht fix mathematische Grundlagen
+        Exam exam = new Exam("Mathematische Grundlagen",semester,category);
 
         //inflate Layout, set View for custom Listview
         LayoutInflater layoutInflater = LayoutInflater.from(getContext());
@@ -49,7 +51,7 @@ public class ExamListAdapter extends ArrayAdapter<Exam> {
         TextView textView2 = (TextView)newconvertView.findViewById(R.id.list_sub);
 
         //set Text to Textviews
-        textView1.setText(name);
+        textView1.setText(category);
         textView2.setText(semester);
 
 

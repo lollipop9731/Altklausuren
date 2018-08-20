@@ -4,6 +4,17 @@ public class Exam {
     private String name;
     private String semester;
     private String category;
+    private String userid;
+    private String filepath;
+    private Boolean uploaded;
+
+    public Boolean getUploaded() {
+        return uploaded;
+    }
+
+    public void setUploaded(Boolean uploaded) {
+        this.uploaded = uploaded;
+    }
 
     public String getCategory() {
         return category;
@@ -17,8 +28,15 @@ public class Exam {
         this.name = name;
         this.semester = semester;
         this.category = category;
+    }
 
-
+    public Exam(String name, String semester, String category, String userid, String filepath) {
+        this.name = name;
+        this.semester = semester;
+        this.category = category;
+        this.userid = userid;
+        this.filepath = filepath;
+        this.uploaded = false;
     }
 
     //default constructor
@@ -39,5 +57,22 @@ public class Exam {
 
     public void setSemester(String semester) {
         this.semester = semester;
+    }
+
+    public String getFilepath() {
+        return filepath;
+    }
+
+    public void setFilepath(String filepath) {
+        this.filepath = filepath;
+    }
+
+    public String getUserid() {
+
+        return userid;
+    }
+
+    public void setUserid(String userid) {
+        this.userid = userid;
     }
 }
