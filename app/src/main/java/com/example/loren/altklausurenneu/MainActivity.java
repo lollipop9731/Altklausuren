@@ -51,6 +51,7 @@ public class MainActivity extends AppCompatActivity
     private static final String DATABASE_CATEGORY = "category";
     private static final String DATABASE_SEMESTER = "semester";
     private static final String DATABASE_NAME = "name";
+    private static final String DOWNLOAD_URL_BUNDLE = "downloadurl";
 
     //code for ReadFile
     private static final int READ_REQUEST_CODE = 42;
@@ -63,8 +64,14 @@ public class MainActivity extends AppCompatActivity
     ExamListAdapter arrayAdapter;
     private ArrayList<Exam> exams;
     private FirebaseMethods firebaseMethods;
-
     private Exam exam;
+
+    //boolean to keep track of dialog status
+    private Boolean dialog_shown;
+    private byte[] bytes;
+    private String filename;
+    private Uri fileData;
+
 
 
 
@@ -73,25 +80,16 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        init();
+
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        exam = new Exam();
 
 
-       getDatabase();
 
-        firebaseMethods = new FirebaseMethods();
-
-        //get current user
-        mAuth = FirebaseAuth.getInstance();
-
-        //get CloudStorage
-        firebaseStorage = FirebaseStorage.getInstance();
-        // Create a storage reference from our app
-        storageRef = firebaseStorage.getReference();
-
-        mDatabase = FirebaseDatabase.getInstance().getReference("exams");
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -148,13 +146,18 @@ public class MainActivity extends AppCompatActivity
 
 
 
+        //Listview handle clicks
         listViewExam.setOnItemClickListener(
                 new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        String name = exams.get(position).getName();
-                        Intent intent = new Intent(MainActivity.this,WebViewclass.class);
-                        startActivity(intent);
+                       Exam downloadurl = exams.get(position);
+
+                        Log.d(TAG,"DownloadURL: "+ downloadurl.getFilepath());
+                        firebaseMethods.getFileFromDatabase(exams.get(position).getFilepath());
+                        Log.d(TAG,"Filename: "+exam.getFilepath());
+
+
                     }
                 });
 
@@ -184,7 +187,7 @@ public class MainActivity extends AppCompatActivity
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         Exam exam;
                         exam = snapshot.getValue(Exam.class);
-                        Log.d(TAG, "User: " + exam.getName());
+                        Log.d(TAG, "User: " + exam.getFilepath());
                         //add to list
                         exams.add(exam);
 
@@ -288,7 +291,7 @@ public class MainActivity extends AppCompatActivity
     private void uploadLocalFileFromPhone(byte[] bytes, final String filename){
 
 
-        final StorageReference klausurReference = storageRef.child(filename);
+        final StorageReference klausurReference = storageRef.child("pdf/"+filename);
         uploadTask = klausurReference.putBytes(bytes);
 
 
@@ -299,8 +302,8 @@ public class MainActivity extends AppCompatActivity
                 //handle failed uploads
                 showSnackbar("Upload fehlgeschlagen");
                 Log.d(TAG,"Upload fehgeschlagen, Path: "+filename);
-                exam.setUploaded(false);
-            }
+
+            }//todo set progress of upload to snackbar
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -308,11 +311,21 @@ public class MainActivity extends AppCompatActivity
                 showSnackbar("Upload erfolgreich!");
                 Log.d(TAG,"Upload erfolgreich: " + filename);
                 //set filepath to current exam
-                exam.setFilepath(klausurReference.getDownloadUrl().toString());
-                //todo upload when user clicks and file is uploaded
+                klausurReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        exam.setFilepath(klausurReference.getDownloadUrl().toString());
+                        Log.d(TAG,"Download URL: "+klausurReference.getDownloadUrl().toString());
+                    }
+                });
+
 
                 //exam uploaded -> ready to upload to databas
-                exam.setUploaded(true);
+               if(dialog_shown){
+                   firebaseMethods.uploadNewExam(exam);
+                   Log.d(TAG,"Dialog gezeigt");
+                   dialog_shown=false;
+               }
 
 
 
@@ -350,6 +363,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
+     *
+     * @return bytes of chosen file
+     */
+    public byte[] getBytes() {
+        return bytes;
+    }
+
+    /**
+     *
+     * @return filename of local file
+     */
+    public String getFilename() {
+        return filename;
+    }
+
+    /**
      * Result from FileSearch
      * @param requestCode
      * @param resultCode
@@ -364,36 +393,25 @@ public class MainActivity extends AppCompatActivity
             Uri uri = null;
             if(data !=null){
                 uri = data.getData();
-                //get path from selected file
-                String filename = uri.getLastPathSegment();
-                Log.d(TAG,"Uri: " + uri.toString());
-
-                //convert to byte[] and upload to cloud storage
-                try{
-
-                    InputStream inputStream = getContentResolver().openInputStream(uri);
-                    try{
-                        byte[] bytes = getBytes(inputStream);
-                        Log.d(TAG,"Erfolgreich zu Bytes gewandelt.");
-                        uploadLocalFileFromPhone(bytes,filename);
-                        showDialog();
+                setFileData(uri);
+                showDialog();
 
 
 
 
-                    }catch (IOException e){
-                        //do nothing
-                    }
-                }catch (FileNotFoundException e){
-                    Log.d(TAG," File not found, cannot convert to BYTE []");
-                    showSnackbar("File not found");
-                }
 
 
+
+            }else{
+                Log.d(TAG,"File not found: ");
             }
         }
     }
 
+    private void setBytesAndFile(byte[] bytes, String filename) {
+        this.bytes = bytes;
+        this.filename = filename;
+    }
 
     /**
      *
@@ -418,18 +436,64 @@ public class MainActivity extends AppCompatActivity
                 R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
 
                     @Override
-                    public void onSelectedData(String category, String semester) {
+                    public void onDialogClicked(String category, String semester) {
                         exam.setCategory(category);
                         exam.setSemester(semester);
 
-                        //only upload to database, if file is stored to firebase storage
-                        if(exam.getUploaded()) {
-                            firebaseMethods.uploadNewExam("Mathe 1", exam.getSemester(), exam.getCategory(), exam.getUserid(), exam.getFilepath());
-                        }
+                        dialog_shown = true;
+                        Log.d(TAG,"Dialog wurde gezeigt.");
+
+                        firebaseMethods.uploadFileToStorage(getFileData());
+                        firebaseMethods.setMethodsInter(new FirebaseMethods.FireBaseMethodsInter() {
+                            @Override
+                            public void onUploadSuccess(String filepath) {
+                                Log.d(TAG,"Upload erfolgreich");
+                                exam.setFilepath(filepath);
+                                firebaseMethods.uploadNewExam(exam);
+                            }
+                        });
+
+
+
+
+
                     }
                 });
 
         examDialog.show(getFragmentManager(),NewExamDialog.TAG);
+
+
+    }
+
+    /**
+     * Sets up the activity
+     */
+    public void init(){
+        dialog_shown = false;
+
+
+
+        exam = new Exam();
+        getDatabase();
+
+        firebaseMethods = new FirebaseMethods(getApplicationContext());
+
+        //get current user
+        mAuth = FirebaseAuth.getInstance();
+        if(mAuth!=null){
+            String user= mAuth.getCurrentUser().getUid();
+            exam.setUserid(user);
+        }
+
+        //get CloudStorage
+        firebaseStorage = FirebaseStorage.getInstance();
+        // Create a storage reference from our app
+        storageRef = firebaseStorage.getReference();
+
+        mDatabase = FirebaseDatabase.getInstance().getReference("exams");
+
+
+
     }
 
 
@@ -447,5 +511,11 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    public void setFileData(Uri fileData) {
+        this.fileData = fileData;
+    }
 
+    public Uri getFileData() {
+        return this.fileData;
+    }
 }

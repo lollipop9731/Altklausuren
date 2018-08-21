@@ -2,6 +2,7 @@ package com.example.loren.altklausurenneu;
 
 import android.app.DialogFragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.ArrayRes;
@@ -9,6 +10,7 @@ import android.support.annotation.ColorRes;
 import android.support.annotation.DrawableRes;
 import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
+import android.util.Log;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -34,6 +36,7 @@ import butterknife.OnClick;
 public class NewExamDialog extends DialogFragment {
 
     private ButtonDialogAction mbuttonDialogAction;
+
 
     public static final String TAG = "OneButtonDialogTag";
 
@@ -122,10 +125,10 @@ public class NewExamDialog extends DialogFragment {
     @OnClick(R.id.dlg_one_button_btn_ok)
     public void onButtonClicked() {
         closeDialog();
-        //open interface
+        //open interface -> pass data when button clicked
         if(mbuttonDialogAction != null) {
 
-            mbuttonDialogAction.onSelectedData(spiCategory.getSelectedItem().toString(),wheelView.getSeletedItem());
+            mbuttonDialogAction.onDialogClicked(spiCategory.getSelectedItem().toString(),wheelView.getSeletedItem());
         }
 
 
@@ -150,8 +153,9 @@ public class NewExamDialog extends DialogFragment {
                                             @ArrayRes int categories, ButtonDialogAction buttonDialogAction){
 
         NewExamDialog newExamDialog = new NewExamDialog();
-        //for interface
+        //interface on new instance
         newExamDialog.mbuttonDialogAction = buttonDialogAction;
+
 
         //Supply the construction arguments for this fragment with a bundle
         Bundle args = new Bundle();
@@ -190,13 +194,18 @@ public class NewExamDialog extends DialogFragment {
         return view;
     }
 
+    @Override
+    public void onDismiss(DialogInterface dialog) {
+        super.onDismiss(dialog);
 
-
+        Log.d(TAG,"Dialog dismissed");
+    }
 
     public interface ButtonDialogAction{
 
-        void onSelectedData(String category, String semester);
+        void onDialogClicked(String category, String semester);
     }
+
 
 
 
