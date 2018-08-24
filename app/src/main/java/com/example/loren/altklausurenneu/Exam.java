@@ -1,20 +1,21 @@
 package com.example.loren.altklausurenneu;
 
+//todo clear this class
+
 public class Exam {
     private String name;
     private String semester;
     private String category;
     private String userid;
     private String filepath;
-    private Boolean uploaded;
 
-    public Boolean getUploaded() {
-        return uploaded;
-    }
 
-    public void setUploaded(Boolean uploaded) {
-        this.uploaded = uploaded;
-    }
+
+
+
+
+
+
 
     public String getCategory() {
         return category;
@@ -36,7 +37,7 @@ public class Exam {
         this.category = category;
         this.userid = userid;
         this.filepath = filepath;
-        this.uploaded = false;
+
     }
 
     //default constructor

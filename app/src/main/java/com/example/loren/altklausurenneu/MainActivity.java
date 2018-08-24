@@ -1,6 +1,8 @@
 package com.example.loren.altklausurenneu;
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,8 +19,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -30,8 +35,10 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -66,11 +73,17 @@ public class MainActivity extends AppCompatActivity
     private FirebaseMethods firebaseMethods;
     private Exam exam;
 
+
+
+
     //boolean to keep track of dialog status
     private Boolean dialog_shown;
     private byte[] bytes;
     private String filename;
     private Uri fileData;
+    private String mimetype;
+
+    double current_progress;
 
 
 
@@ -86,6 +99,7 @@ public class MainActivity extends AppCompatActivity
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
 
 
@@ -121,7 +135,7 @@ public class MainActivity extends AppCompatActivity
                 //Action here
                switch(menuItem.getItemId()){
                    case R.id.menu_upload:
-                       exam.setUploaded(false);
+
                        FileSearch();
                        break;
                    case R.id.menu_uploadtip:
@@ -151,11 +165,14 @@ public class MainActivity extends AppCompatActivity
                 new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                       Exam downloadurl = exams.get(position);
+                       Exam current = exams.get(position);
 
-                        Log.d(TAG,"DownloadURL: "+ downloadurl.getFilepath());
-                        firebaseMethods.getFileFromDatabase(exams.get(position).getFilepath());
-                        Log.d(TAG,"Filename: "+exam.getFilepath());
+                        Log.d(TAG,"Filepath: "+ current.getFilepath());
+
+
+                        //todo add progress listener for download
+                        firebaseMethods.getFileFromDatabase(current.getFilepath());
+
 
 
                     }
@@ -188,6 +205,7 @@ public class MainActivity extends AppCompatActivity
                         Exam exam;
                         exam = snapshot.getValue(Exam.class);
                         Log.d(TAG, "User: " + exam.getFilepath());
+
                         //add to list
                         exams.add(exam);
 
@@ -244,7 +262,7 @@ public class MainActivity extends AppCompatActivity
         }
         if(id==R.id.action_signout){
             mAuth.signOut();
-            showSnackbar("Erfolgreich abgemeldet.");
+            showSnackbar("Erfolgreich abgemeldet.",this.findViewById(android.R.id.content));
             Intent intent = new Intent(MainActivity.this,Login.class);
             startActivity(intent);
             return true;
@@ -279,64 +297,11 @@ public class MainActivity extends AppCompatActivity
      * Easy Method to show snackbar
      * @param message to be shown
      */
-    private void showSnackbar(String message) {
-        Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT).show();
+    public void showSnackbar(String message, View view) {
+        Snackbar.make(view.findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT).show();
     }
 
-    /**
-     * Upload byte[] to Firebase Cloud Storage
-     * @param bytes file in bytes[[]
-     * @param filename path of the file
-     */
-    private void uploadLocalFileFromPhone(byte[] bytes, final String filename){
 
-
-        final StorageReference klausurReference = storageRef.child("pdf/"+filename);
-        uploadTask = klausurReference.putBytes(bytes);
-
-
-        //Register if upload fails
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                //handle failed uploads
-                showSnackbar("Upload fehlgeschlagen");
-                Log.d(TAG,"Upload fehgeschlagen, Path: "+filename);
-
-            }//todo set progress of upload to snackbar
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                //handle successful uploads
-                showSnackbar("Upload erfolgreich!");
-                Log.d(TAG,"Upload erfolgreich: " + filename);
-                //set filepath to current exam
-                klausurReference.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                    @Override
-                    public void onSuccess(Uri uri) {
-                        exam.setFilepath(klausurReference.getDownloadUrl().toString());
-                        Log.d(TAG,"Download URL: "+klausurReference.getDownloadUrl().toString());
-                    }
-                });
-
-
-                //exam uploaded -> ready to upload to databas
-               if(dialog_shown){
-                   firebaseMethods.uploadNewExam(exam);
-                   Log.d(TAG,"Dialog gezeigt");
-                   dialog_shown=false;
-               }
-
-
-
-
-            }
-        });
-
-
-
-
-    }
 
     /**
      * Opens the file explorer to choose the file to upload
@@ -353,7 +318,7 @@ public class MainActivity extends AppCompatActivity
 
         //sets the type first to all
         intent.setType("*/*");
-        //apply new mimyTypes API ab 19, maybe other solution
+
         //todo new soltion here to support api <19
         intent.putExtra(Intent.EXTRA_MIME_TYPES,mimeTypes);
 
@@ -362,21 +327,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    /**
-     *
-     * @return bytes of chosen file
-     */
-    public byte[] getBytes() {
-        return bytes;
-    }
-
-    /**
-     *
-     * @return filename of local file
-     */
-    public String getFilename() {
-        return filename;
-    }
 
     /**
      * Result from FileSearch
@@ -393,14 +343,16 @@ public class MainActivity extends AppCompatActivity
             Uri uri = null;
             if(data !=null){
                 uri = data.getData();
+
+                //get mime Type of selected file -> Jpeg or pdf
+                ContentResolver cR = this.getContentResolver();
+                MimeTypeMap mime = MimeTypeMap.getSingleton();
+                String type = mime.getExtensionFromMimeType(cR.getType(uri));
+                Log.d(TAG,"Mime Typ: " +type);
+
+                exam.setFilepath("."+type);
                 setFileData(uri);
                 showDialog();
-
-
-
-
-
-
 
             }else{
                 Log.d(TAG,"File not found: ");
@@ -408,48 +360,52 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void setBytesAndFile(byte[] bytes, String filename) {
-        this.bytes = bytes;
-        this.filename = filename;
-    }
-
-    /**
-     *
-     * @param inputStream
-     * @return
-     * @throws IOException
-     */
-    public byte[] getBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
-        int bufferSize = 1024;
-        byte[] buffer = new byte[bufferSize];
-
-        int len = 0;
-        while ((len = inputStream.read(buffer)) != -1) {
-            byteBuffer.write(buffer, 0, len);
-        }
-        return byteBuffer.toByteArray();
-    }
 
     public void showDialog(){
         final NewExamDialog examDialog = DialogFactory.makeExamDialog(R.string.dialog_title,
                 R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
 
                     @Override
-                    public void onDialogClicked(String category, String semester) {
+                    public void onDialogClicked(String category, final String semester) {
                         exam.setCategory(category);
                         exam.setSemester(semester);
 
                         dialog_shown = true;
                         Log.d(TAG,"Dialog wurde gezeigt.");
 
-                        firebaseMethods.uploadFileToStorage(getFileData());
+
+                        //upload chosen file to storage
+                        firebaseMethods.uploadFileToStorage(getFileData(),exam.getFilepath());
+                        firebaseMethods.setGetCurrentProgressInter(new FirebaseMethods.getCurrentProgress() {
+                            @Override
+                            public void onProgress(double progress) {
+
+                                current_progress = progress;
+                            //todo delete interface -> keep easy progress circle at first
+                            }
+
+
+                        });
+                        final Snackbar snackbar = Snackbar.make(findViewById(android.R.id.content),"Datei wird hochgeladen...",Snackbar.LENGTH_INDEFINITE);
+                        ViewGroup contentLay = (ViewGroup) snackbar.getView().findViewById(android.support.design.R.id.snackbar_text).getParent();
+                        ProgressBar item = new ProgressBar(getApplicationContext());
+                        contentLay.addView(item,0);
+                        snackbar.show();
+                        Log.d(TAG,"Aktueller progress: " + Double.toString(current_progress));
+
+
+
                         firebaseMethods.setMethodsInter(new FirebaseMethods.FireBaseMethodsInter() {
                             @Override
                             public void onUploadSuccess(String filepath) {
                                 Log.d(TAG,"Upload erfolgreich");
                                 exam.setFilepath(filepath);
+
+                                //if upload was successfull write new Databaseentry
                                 firebaseMethods.uploadNewExam(exam);
+                                if(current_progress>99){
+                                    snackbar.dismiss();
+                                }
                             }
                         });
 
@@ -518,4 +474,6 @@ public class MainActivity extends AppCompatActivity
     public Uri getFileData() {
         return this.fileData;
     }
+
+
 }

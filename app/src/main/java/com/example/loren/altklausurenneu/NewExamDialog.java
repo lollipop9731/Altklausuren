@@ -38,7 +38,7 @@ public class NewExamDialog extends DialogFragment {
     private ButtonDialogAction mbuttonDialogAction;
 
 
-    public static final String TAG = "OneButtonDialogTag";
+    public static final String TAG = "NewExamDialogTag";
 
 
     //find view by id with butterknife
