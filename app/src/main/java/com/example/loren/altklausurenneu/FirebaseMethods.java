@@ -51,11 +51,7 @@ import java.util.Map;
 
 
     private FireBaseMethodsInter methodsInter;
-    private getCurrentProgress getCurrentProgressInter;
 
-    public void setGetCurrentProgressInter(getCurrentProgress getCurrentProgressInter) {
-            this.getCurrentProgressInter = getCurrentProgressInter;
-        }
 
         private static FirebaseDatabase database;
 
@@ -119,7 +115,7 @@ import java.util.Map;
 
     }
 
-    //todo progress listener for upload in snackbar
+
     public void uploadFileToStorage(Uri data,String type){
 
 
@@ -158,9 +154,8 @@ import java.util.Map;
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                //Interface to send Progress to Main
-                getCurrentProgressInter.onProgress(progress);
+
+
 
 
 
@@ -239,6 +234,14 @@ import java.util.Map;
                     Log.d(TAG,"No Application to open file.");
                 }
 
+                if(methodsInter !=null){
+                    Log.d(TAG,"got into interface download true");
+                    //if upload of file was successful, pass the name of the uploaded file to Interface
+                    methodsInter.onDownloadSuccess(true);
+                }
+                //interface for download success
+
+
 
 
 
@@ -247,17 +250,21 @@ import java.util.Map;
             @Override
             public void onFailure(@NonNull Exception exception) {
                 // Handle any errors
+                if(methodsInter !=null){
+                    //if upload of file was successful, pass the name of the uploaded file to Interface
+                    methodsInter.onDownloadSuccess(false);
+                }
             }
         });
     }
 
     public interface FireBaseMethodsInter{
             void onUploadSuccess(String filepath);
+            void onDownloadSuccess(Boolean downloaded);
     }
 
-    public interface getCurrentProgress{
-            void onProgress(double progress);
-    }
+
+
 
 
 
