@@ -2,7 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:title="Upload eigener Materialien"
+        android:title="Dateiupload"
         android:icon="@drawable/ic_file_upload_black_24dp"
         android:id="@+id/menu_upload"
         android:orderInCategory="1"
@@ -10,8 +10,8 @@
         />
 
     <item
-        android:title="Bild hochladen"
-        android:icon="@drawable/ic_baseline_highlight_24px"
+        android:title="Kameraupload"
+        android:icon="@drawable/ic_baseline_camera_alt_24px"
         android:id="@+id/menu_uploadtip"
         android:orderInCategory="0"
         />

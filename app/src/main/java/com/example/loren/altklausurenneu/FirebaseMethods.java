@@ -150,6 +150,11 @@ import java.util.Map;
             @Override
             public void onFailure(@NonNull Exception e) {
                 Log.d(TAG,"Upload war nicht erfolgreich");
+                if(methodsInter !=null){
+                    //if upload of file was successful, pass the name of the uploaded file to Interface
+                    methodsInter.onUploadSuccess("Fail");
+
+                }
             }
         }).addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
             @Override
@@ -177,20 +182,17 @@ import java.util.Map;
             Log.d(TAG,"Getting PDF-File");
         }else{
             //open JPEG
-            if(path.contains(".jpg")){
-                Reference = storageReference.child("jpg/"+path);
-                Log.d(TAG,"Getting JPEG-File");
-            }else{
-                Log.d(TAG,"File no jpg or pdf. Returns ");
+            if (path.contains(".jpg")) {
+                Reference = storageReference.child("jpg/" + path);
+                Log.d(TAG, "Getting JPEG-File");
+            } else {
+                Log.d(TAG, "File no jpg or pdf. Returns ");
                 return;
             }
         }
 
 
-
-
-
-        try{
+        try {
             localFile = File.createTempFile("tempexam", ".pdf");
         }catch (IOException e){
             Log.d(TAG,e.getMessage());
@@ -251,7 +253,7 @@ import java.util.Map;
             public void onFailure(@NonNull Exception exception) {
                 // Handle any errors
                 if(methodsInter !=null){
-                    //if upload of file was successful, pass the name of the uploaded file to Interface
+                    //if download wasnt successfull
                     methodsInter.onDownloadSuccess(false);
                 }
             }

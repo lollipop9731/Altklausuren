@@ -1,4 +1,8 @@
 <paths>
     <cache-path name="cache" path="/" />
      />
+    
+    <external-path
+        name="my_images"
+        path="Android/data/com.example.loren.altklausuren/files/Pictures"/>
 </paths>

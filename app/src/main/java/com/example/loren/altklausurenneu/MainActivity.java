@@ -2,13 +2,19 @@ package com.example.loren.altklausurenneu;
 
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -22,9 +28,12 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
+import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
+import com.example.loren.altklausurenneu.Utils.ExpandListModel;
+import com.example.loren.altklausurenneu.Utils.ExpandableListAdapter;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -41,10 +50,15 @@ import com.google.firebase.storage.UploadTask;
 
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
@@ -62,6 +76,7 @@ public class MainActivity extends AppCompatActivity
     private static final String DATABASE_SEMESTER = "semester";
     private static final String DATABASE_NAME = "name";
     private static final String DOWNLOAD_URL_BUNDLE = "downloadurl";
+    static final int REQUEST_TAKE_PHOTO = 1;
 
     //code for ReadFile
     private static final int READ_REQUEST_CODE = 42;
@@ -74,18 +89,27 @@ public class MainActivity extends AppCompatActivity
     ExamListAdapter arrayAdapter;
     private ArrayList<Exam> exams;
     private FirebaseMethods firebaseMethods;
+
+    @Override
+    public void startActivityForResult(Intent intent, int requestCode) {
+        super.startActivityForResult(intent, requestCode);
+    }
+
     private Exam exam;
     private Snackbar snackbar;
-private View rootview;
+    private View rootview;
 
-    //boolean to keep track of dialog status
-    private Boolean dialog_shown;
-    private byte[] bytes;
-    private String filename;
+
     private Uri fileData;
-    private String mimetype;
+    private String mCurrentPhotoPath;
 
-    double current_progress;
+    ExpandableListAdapter mMenuAdapter;
+    ExpandableListView expandableList;
+    List<ExpandListModel> listDataHeader;
+    HashMap<ExpandListModel, List<String>> listDataChild;
+
+
+
     //checks if File is downloaded
     private Boolean downloaded;
 
@@ -98,6 +122,8 @@ private View rootview;
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
+
         rootview = findViewById(android.R.id.content);
 
         init();
@@ -108,6 +134,9 @@ private View rootview;
 
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+
+
+
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
@@ -139,7 +168,7 @@ private View rootview;
                         FileSearch();
                         break;
                     case R.id.menu_uploadtip:
-                        showDialog();
+                        TakePictureIntent();
                         break;
                 }
 
@@ -378,10 +407,23 @@ private View rootview;
                 Log.d(TAG, "File not found: ");
             }
         }
+        if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
+
+
+                Log.d(TAG,"Photo file:" +mCurrentPhotoPath);
+                File file = new File(mCurrentPhotoPath);
+                Uri uri = Uri.fromFile(file);
+                Log.d(TAG,"Current Uri: "+uri.toString());
+
+                setFileData(uri);
+                exam.setFilepath(".jpg");
+                showDialog();
+
+        }
     }
 
 
-    public void showDialog() {
+    public void showDialog()    {
 
         if(exam.getFilepath().contains(".pdf")){
             final NewExamDialog examDialog = DialogFactory.makePDFExamDialog(R.string.dialog_title,
@@ -405,12 +447,18 @@ private View rootview;
                             firebaseMethods.setMethodsInter(new FirebaseMethods.FireBaseMethodsInter() {
                                 @Override
                                 public void onUploadSuccess(String filepath) {
-                                    Log.d(TAG, "Upload erfolgreich");
-                                    exam.setFilepath(filepath);
+                                    if(filepath.equals("Fail")){
+                                        snackbar.dismiss();
+                                        showSnackbar("Upload fehlgeschlagen",rootview);
+                                    }else{
+                                        Log.d(TAG, "Upload erfolgreich");
+                                        exam.setFilepath(filepath);
 
-                                    //if upload was successfull write new Databaseentry
-                                    firebaseMethods.uploadNewExam(exam);
-                                    snackbar.dismiss();
+                                        //if upload was successfull write new Databaseentry
+                                        firebaseMethods.uploadNewExam(exam);
+                                        snackbar.dismiss();
+                                    }
+
                                 }
 
                                 //todo delete and use other method
@@ -478,7 +526,7 @@ private View rootview;
      * Sets up the activity
      */
     public void init() {
-        dialog_shown = false;
+
         downloaded = false;
 
 
@@ -535,6 +583,50 @@ private View rootview;
 
     public Uri getFileData() {
         return this.fileData;
+    }
+
+    private File createImageFile() throws IOException{
+
+        // Create an image file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefix */
+                ".jpg",         /* suffix */
+                storageDir      /* directory */
+        );
+
+        // Save a file: path for use with ACTION_VIEW intents
+        mCurrentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
+    private void TakePictureIntent(){
+
+        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+
+        // Ensure that there's a camera activity to handle the intent
+        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
+            // Create the File where the photo should go
+            File photoFile = null;
+            try {
+                photoFile = createImageFile();
+            } catch (IOException ex) {
+                // Error occurred while creating the File
+                Log.d(TAG,"File for image could not be created: "+ex.getLocalizedMessage());
+            }
+            // Continue only if the File was successfully created
+            if (photoFile != null) {
+                Log.d(TAG,"File for image successfully created.");
+                Uri photoURI = FileProvider.getUriForFile(this,
+                        BuildConfig.APPLICATION_ID,
+                        photoFile);
+                //get uri for photo for content provider
+                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
+            }
+        }
     }
 
 
