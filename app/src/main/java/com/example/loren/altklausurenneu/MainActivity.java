@@ -2,11 +2,7 @@ package com.example.loren.altklausurenneu;
 
 import android.app.Activity;
 import android.content.ContentResolver;
-import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -27,15 +23,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
+import android.webkit.WebView;
 import android.widget.AdapterView;
 import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
-import com.example.loren.altklausurenneu.Utils.ExpandListModel;
-import com.example.loren.altklausurenneu.Utils.ExpandableListAdapter;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 
 import com.google.firebase.database.DataSnapshot;
@@ -44,16 +37,12 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -66,7 +55,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, FirebaseMethods.FireBaseMethodsInter {
 
 
-
+//todo clear this interface chaos
 
     ListView listViewExam;
     FabSpeedDial fabSpeedDial;
@@ -77,6 +66,7 @@ public class MainActivity extends AppCompatActivity
     private static final String DATABASE_NAME = "name";
     private static final String DOWNLOAD_URL_BUNDLE = "downloadurl";
     static final int REQUEST_TAKE_PHOTO = 1;
+    private static final String BUNDLE_DOWNLOAD_URL = "url";
 
     //code for ReadFile
     private static final int READ_REQUEST_CODE = 42;
@@ -103,10 +93,7 @@ public class MainActivity extends AppCompatActivity
     private Uri fileData;
     private String mCurrentPhotoPath;
 
-    ExpandableListAdapter mMenuAdapter;
-    ExpandableListView expandableList;
-    List<ExpandListModel> listDataHeader;
-    HashMap<ExpandListModel, List<String>> listDataChild;
+
 
 
 
@@ -199,14 +186,13 @@ public class MainActivity extends AppCompatActivity
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         Exam current = exams.get(position);
+                        Intent intent = new Intent(MainActivity.this, PdfViewer.class);
+                        Log.d(TAG,"Current Download: "+ current.getDownloadurl());
+                        intent.putExtra(BUNDLE_DOWNLOAD_URL,current.getDownloadurl());
+//todo open intent with glide, if not pdf but jpg
+                        startActivity(intent);
 
-                        Log.d(TAG, "Filepath: " + current.getFilepath());
 
-                        //set interface again, wasnt called properly
-                        firebaseMethods.setMethodsInter(fireBaseMethodsInter);
-                        showProgressSnackbar("Datei wird heruntergeladen...");
-
-                        firebaseMethods.getFileFromDatabase(current.getFilepath());
 
 
                     }
@@ -234,7 +220,7 @@ public class MainActivity extends AppCompatActivity
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         Exam exam;
                         exam = snapshot.getValue(Exam.class);
-                        Log.d(TAG, "User: " + exam.getFilepath());
+                        Log.d(TAG, "User: " + exam.getDownloadurl());
 
                         //add to list
                         exams.add(exam);
@@ -260,7 +246,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public void onUploadSuccess(String filepath) {
+    public void onUploadSuccess(String filepath,String download) {
 
     }
 
@@ -435,24 +421,28 @@ public class MainActivity extends AppCompatActivity
                             exam.setSemester(semester);
 
 
+
                             Log.d(TAG, "Dialog wurde gezeigt.");
 
 
                             //upload chosen file to storage
-                            firebaseMethods.uploadFileToStorage(getFileData(), exam.getFilepath());
+                            firebaseMethods.uploadFileToStorageNEW(getFileData(),exam.getFilepath());
 
                             showProgressSnackbar("Datei wird hochgeladen...");
 
 
                             firebaseMethods.setMethodsInter(new FirebaseMethods.FireBaseMethodsInter() {
                                 @Override
-                                public void onUploadSuccess(String filepath) {
+                                public void onUploadSuccess(String filepath, String downloadurl) {
                                     if(filepath.equals("Fail")){
                                         snackbar.dismiss();
                                         showSnackbar("Upload fehlgeschlagen",rootview);
                                     }else{
                                         Log.d(TAG, "Upload erfolgreich");
+                                        //set Filepath and Download URL if upload was successful, get from FireBaseMethods
                                         exam.setFilepath(filepath);
+                                        exam.setDownloadurl(downloadurl);
+                                        Log.d(TAG, "Download url set: "+ exam.getDownloadurl());
 
                                         //if upload was successfull write new Databaseentry
                                         firebaseMethods.uploadNewExam(exam);
@@ -488,16 +478,18 @@ public class MainActivity extends AppCompatActivity
 
 
                             //upload chosen file to storage
-                            firebaseMethods.uploadFileToStorage(getFileData(), exam.getFilepath());
+                            firebaseMethods.uploadFileToStorageNEW(getFileData(), exam.getFilepath());
 
                             showProgressSnackbar("Datei wird hochgeladen...");
 
 
                             firebaseMethods.setMethodsInter(new FirebaseMethods.FireBaseMethodsInter() {
                                 @Override
-                                public void onUploadSuccess(String filepath) {
-                                    Log.d(TAG, "Upload erfolgreich");
+                                public void onUploadSuccess(String filepath,String download) {
+                                    //set Filepath and Download URL if upload was successful, get from FireBaseMethods
                                     exam.setFilepath(filepath);
+                                    exam.setDownloadurl(download);
+                                    Log.d(TAG, "Download url set: "+ exam.getDownloadurl());
 
                                     //if upload was successfull write new Databaseentry
                                     firebaseMethods.uploadNewExam(exam);

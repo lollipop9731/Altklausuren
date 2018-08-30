@@ -38,6 +38,7 @@ public class ExamListAdapter extends ArrayAdapter<Exam> {
         String semester = getItem(position).getSemester();
 
         String filetypetemp = getItem(position).getFilepath();
+        //todo add number of pages
         if(filetypetemp.contains(".pdf")){
                 filetype = "pdf";
         }else{
@@ -61,10 +62,12 @@ public class ExamListAdapter extends ArrayAdapter<Exam> {
         TextView textView2 = (TextView)newconvertView.findViewById(R.id.listview_sub);
         ImageView imageView = (ImageView)newconvertView.findViewById(R.id.listview_svg);
 
+        //set correct icon depending on file type
         if(filetype.equals("jpg")){
-            imageView.setBackgroundResource(R.drawable.ic_jpg___bw);
+            imageView.setBackgroundResource(R.drawable.ic_jpg);
+
         }else{
-            imageView.setBackgroundResource(R.drawable.ic_pdf_bw);
+            imageView.setBackgroundResource(R.drawable.ic_pdf_neu);
         }
 
         //set Text to Textviews

@@ -59,7 +59,7 @@ public class WebViewclass extends AppCompatActivity {
 
         String url = getIntent().getExtras().getString(DOWNLOAD_URL_BUNDLE);
         Log.d(TAG,"Url from Intent: "+url);
-        String urlneu = "https://firebasestorage.googleapis.com/v0/b/altklausuren-31811.appspot.com/o/3194?alt=media&token=7930b85a-8fe9-4f56-b2d2-b2806e1c0b19";
+        String urlneu = "https://firebasestorage.googleapis.com/v0/b/altklausuren-31811.appspot.com/o/pdf%2F1535218824305.pdf?alt=media&token=b00f0519-7f22-4b1a-b08f-b39f10af9e73";
 
         //Example URL from PDF, loads
         webView.loadUrl("http://drive.google.com/viewerng/viewer?embedded=true&url="+urlneu);

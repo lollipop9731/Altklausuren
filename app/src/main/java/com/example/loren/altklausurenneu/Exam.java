@@ -8,14 +8,16 @@ public class Exam {
     private String category;
     private String userid;
     private String filepath;
+    private String downloadurl;
 
 
+    public String getDownloadurl() {
+        return downloadurl;
+    }
 
-
-
-
-
-
+    public void setDownloadurl(String downloadurl) {
+        this.downloadurl = downloadurl;
+    }
 
     public String getCategory() {
         return category;

@@ -31,21 +31,22 @@ import java.lang.ref.Reference;
 import java.util.HashMap;
 import java.util.Map;
 
-    public class FirebaseMethods  {
+public class FirebaseMethods {
 
-        private Context context;
-        private File localFile;
-        StorageReference sRef;
+    private Context context;
+    private File localFile;
+    StorageReference sRef;
 
-        public FirebaseMethods(Context context) {
-            this.context = context;
-        }
+    public FirebaseMethods(Context context) {
+        this.context = context;
+    }
 
-        private static final String DATABASE_CATEGORY = "category";
+    private static final String DATABASE_CATEGORY = "category";
     private static final String DATABASE_SEMESTER = "semester";
     private static final String DATABASE_NAME = "name";
     private static final String DATABASE_FILEPATH = "filepath";
     private static final String DATABASE_UID = "user_id";
+    private static final String DATABASE_DOWNLOADURL = "downloadurl";
     private static final String TAG = "FirebaseDatase";
     private UploadTask uploadTask;
 
@@ -53,7 +54,7 @@ import java.util.Map;
     private FireBaseMethodsInter methodsInter;
 
 
-        private static FirebaseDatabase database;
+    private static FirebaseDatabase database;
 
     private FirebaseStorage firebaseStorage;
     private FirebaseAuth firebaseAuth;
@@ -68,9 +69,8 @@ import java.util.Map;
     }
 
 
-
-    private static FirebaseDatabase getDatabase(){
-        if ( database == null) {
+    private static FirebaseDatabase getDatabase() {
+        if (database == null) {
             database = FirebaseDatabase.getInstance();
             database.setPersistenceEnabled(true);
             // ...
@@ -81,11 +81,12 @@ import java.util.Map;
 
     //todo delete filepath -> we only need name to get pdf
 
-        /**
-         * Writes new DB Entry with the details about the new exam
-         * @param exam Exam to be uploaded
-         */
-    public void uploadNewExam(Exam exam){
+    /**
+     * Writes new DB Entry with the details about the new exam
+     *
+     * @param exam Exam to be uploaded
+     */
+    public void uploadNewExam(Exam exam) {
 
 
         //todo get real name
@@ -93,16 +94,17 @@ import java.util.Map;
 
 
         Map<String, String> examneu = new HashMap<>();
-        examneu.put(DATABASE_CATEGORY,exam.getCategory());
-        examneu.put(DATABASE_NAME,exam.getName());
-        examneu.put(DATABASE_SEMESTER,exam.getSemester());
-        examneu.put(DATABASE_FILEPATH,exam.getFilepath());
-        examneu.put(DATABASE_UID,exam.getUserid());
+        examneu.put(DATABASE_CATEGORY, exam.getCategory());
+        examneu.put(DATABASE_NAME, exam.getName());
+        examneu.put(DATABASE_SEMESTER, exam.getSemester());
+        examneu.put(DATABASE_FILEPATH, exam.getFilepath());
+        examneu.put(DATABASE_UID, exam.getUserid());
+        examneu.put(DATABASE_DOWNLOADURL, exam.getDownloadurl());
 
         databaseReference.push().setValue(examneu).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                Log.d(TAG,"Erfolgreich hochgeladen");
+                Log.d(TAG, "Erfolgreich hochgeladen");
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -112,26 +114,24 @@ import java.util.Map;
         });
 
 
-
     }
 
 
-    public void uploadFileToStorage(Uri data,String type){
+    public void uploadFileToStorage(Uri data, String type) {
 
 
-    //todo change name not always current time Millis, must be unique
+        //todo change name not always current time Millis, must be unique
 
 
-
-
-        if(type.contains(".pdf")) {
+        if (type.contains(".pdf")) {
             sRef = storageReference.child("pdf/" + System.currentTimeMillis() + ".pdf");
-            Log.d(TAG,"Current Mime Type: PDF");
-        }else{
-            if(type.contains(".jpg")){
+            Log.d(TAG, "Current Mime Type: PDF");
+        } else {
+            if (type.contains(".jpg")) {
                 sRef = storageReference.child("jpg/" + System.currentTimeMillis() + ".jpg");
-                Log.d(TAG,"Current Mime Type: JPEG");
-            }else{Log.d(TAG,"Unknow Mime Type");
+                Log.d(TAG, "Current Mime Type: JPEG");
+            } else {
+                Log.d(TAG, "Unknow Mime Type");
                 return;
             }
         }
@@ -140,19 +140,19 @@ import java.util.Map;
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 //todo maybe use Metadata here for file -> better solution then mine
-                Log.d(TAG,"Upload über neuen Task erfolgreich:  "+sRef.getName());
-                if(methodsInter !=null){
+                Log.d(TAG, "Upload über neuen Task erfolgreich:  " + sRef.getName());
+                if (methodsInter != null) {
                     //if upload of file was successful, pass the name of the uploaded file to Interface
-                    methodsInter.onUploadSuccess(sRef.getName());
+                    methodsInter.onUploadSuccess(sRef.getName(),"moind");
                 }
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.d(TAG,"Upload war nicht erfolgreich");
-                if(methodsInter !=null){
+                Log.d(TAG, "Upload war nicht erfolgreich");
+                if (methodsInter != null) {
                     //if upload of file was successful, pass the name of the uploaded file to Interface
-                    methodsInter.onUploadSuccess("Fail");
+                    methodsInter.onUploadSuccess("Fail","Fail");
 
                 }
             }
@@ -161,26 +161,94 @@ import java.util.Map;
             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
 
 
-
-
-
             }
         });
 
 
+    }
+
+
+    public void uploadFileToStorageNEW(Uri data, String type) {
+
+
+        //todo change name not always current time Millis, must be unique
+
+
+        if (type.contains(".pdf")) {
+            sRef = storageReference.child("pdf/" + System.currentTimeMillis() + ".pdf");
+            Log.d(TAG, "Current Mime Type: PDF");
+        } else {
+            if (type.contains(".jpg")) {
+                sRef = storageReference.child("jpg/" + System.currentTimeMillis() + ".jpg");
+                Log.d(TAG, "Current Mime Type: JPEG");
+            } else {
+                Log.d(TAG, "Unknow Mime Type");
+                return;
+            }
+        }
+
+        uploadTask = sRef.putFile(data);
+
+        Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
+            @Override
+            public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
+                if(!task.isSuccessful()){
+                    throw task.getException();
+                }
+                //continue with task to get download url
+                return sRef.getDownloadUrl();
+            }
+        }).addOnCompleteListener(new OnCompleteListener<Uri>() {
+            @Override
+            public void onComplete(@NonNull Task<Uri> task) {
+                if(task.isSuccessful()){
+                    Uri uridownload = task.getResult();
+                    Log.d(TAG, "Upload über neuen Task erfolgreich:  " + sRef.getName());
+                    if (methodsInter != null) {
+
+                        //if upload of file was successful, pass the name of the uploaded file to Interface
+                        methodsInter.onUploadSuccess(sRef.getName(),uridownload.toString());
+                    }
+                    Log.d(TAG,"Neue URL: "+uridownload.toString());
+                }else{
+                    Log.d(TAG,"Couldnt get download url");
+                }
+            }
+        });
 
 
     }
 
-    public void getFileFromDatabase(final String path){
+    public String getDownloadURL(String path) {
+        if (path.contains(".pdf")) {
+            Reference = storageReference.child("pdf/" + path);
 
+            Log.d(TAG, "Download URL for PDF");
+        } else {
+            //open JPEG
+            if (path.contains(".jpg")) {
+                Reference = storageReference.child("jpg/" + path);
+                Log.d(TAG, "Download URL for JPEG");
+            } else {
+                Log.d(TAG, "Download URL no Jpeg or pdf ");
+            }
+            return Reference.getDownloadUrl().toString();
+
+        }
+        Log.d(TAG, "URL: " + Reference.getDownloadUrl().toString());
+        Log.d(TAG, "Download URL: " + Reference.getDownloadUrl().toString());
+        return Reference.getDownloadUrl().toString();
+    }
+
+    public void getFileFromDatabase(final String path) {
 
 
         //open PDF
-        if(path.contains(".pdf")){
-            Reference = storageReference.child("pdf/"+path);
-            Log.d(TAG,"Getting PDF-File");
-        }else{
+        if (path.contains(".pdf")) {
+            Reference = storageReference.child("pdf/" + path);
+
+            Log.d(TAG, "Getting PDF-File");
+        } else {
             //open JPEG
             if (path.contains(".jpg")) {
                 Reference = storageReference.child("jpg/" + path);
@@ -189,13 +257,15 @@ import java.util.Map;
                 Log.d(TAG, "File no jpg or pdf. Returns ");
                 return;
             }
+
         }
 
 
+        //todo new name for jpeg
         try {
             localFile = File.createTempFile("tempexam", ".pdf");
-        }catch (IOException e){
-            Log.d(TAG,e.getMessage());
+        } catch (IOException e) {
+            Log.d(TAG, e.getMessage());
             return;
         }
 
@@ -204,7 +274,7 @@ import java.util.Map;
             @Override
             public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
                 // Local temp file has been created
-                Log.d(TAG,"Local temp file has been created.");
+                Log.d(TAG, "Local temp file has been created.");
 
                 Intent intent = new Intent(Intent.ACTION_VIEW);
 
@@ -212,39 +282,36 @@ import java.util.Map;
                 intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 
                 //generate Uri -> why to string?
-               Uri uri = FileProvider.getUriForFile(context,BuildConfig.APPLICATION_ID,localFile);
+                Uri uri = FileProvider.getUriForFile(context, BuildConfig.APPLICATION_ID, localFile);
 
                 //set type for pdf
-                if(path.contains(".pdf")){
-                    intent.setDataAndType(uri,"application/pdf");
-                    Log.d(TAG,"Intent Type pdf chosen");
+                if (path.contains(".pdf")) {
+                    intent.setDataAndType(uri, "application/pdf");
+                    Log.d(TAG, "Intent Type pdf chosen");
                 }
 
                 //set type for jpeg
-                if(path.contains(".jpg")){
-                    intent.setDataAndType(uri,"image/jpeg");
-                    Log.d(TAG,"Intent Type JPEG chosen");
+                if (path.contains(".jpg")) {
+                    intent.setDataAndType(uri, "image/jpeg");
+                    Log.d(TAG, "Intent Type JPEG chosen");
                 }
 
 
                 // validate that the device can open your File!
                 PackageManager pm = context.getPackageManager();
                 if (intent.resolveActivity(pm) != null) {
-                    Log.d(TAG,"Application is there");
+                    Log.d(TAG, "Application is there");
                     context.startActivity(intent);
-                }else{
-                    Log.d(TAG,"No Application to open file.");
+                } else {
+                    Log.d(TAG, "No Application to open file.");
                 }
 
-                if(methodsInter !=null){
-                    Log.d(TAG,"got into interface download true");
+                if (methodsInter != null) {
+                    Log.d(TAG, "got into interface download true");
                     //if upload of file was successful, pass the name of the uploaded file to Interface
                     methodsInter.onDownloadSuccess(true);
                 }
                 //interface for download success
-
-
-
 
 
             }
@@ -252,7 +319,7 @@ import java.util.Map;
             @Override
             public void onFailure(@NonNull Exception exception) {
                 // Handle any errors
-                if(methodsInter !=null){
+                if (methodsInter != null) {
                     //if download wasnt successfull
                     methodsInter.onDownloadSuccess(false);
                 }
@@ -260,16 +327,11 @@ import java.util.Map;
         });
     }
 
-    public interface FireBaseMethodsInter{
-            void onUploadSuccess(String filepath);
-            void onDownloadSuccess(Boolean downloaded);
+    public interface FireBaseMethodsInter {
+        void onUploadSuccess(String filepath, String downloadurl);
+
+        void onDownloadSuccess(Boolean downloaded);
     }
-
-
-
-
-
-
 
 
 }
