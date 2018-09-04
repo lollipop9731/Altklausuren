@@ -68,11 +68,11 @@
                           <map>
                             <entry key="assetSourceType" value="FILE" />
                             <entry key="color" value="ffffff" />
-                            <entry key="height" value="30" />
-                            <entry key="outputName" value="ic_jpg___bw" />
+                            <entry key="height" value="512" />
+                            <entry key="outputName" value="ic_camera_shutter" />
                             <entry key="overrideSize" value="true" />
-                            <entry key="sourceFile" value="C:\Users\loren\OneDrive\Sonstiges\Altklausuren App\Ressourcen\SVG\jpg - bw.svg" />
-                            <entry key="width" value="30" />
+                            <entry key="sourceFile" value="C:\Users\loren\OneDrive\Sonstiges\Altklausuren App\Ressourcen\SVG\camera_shutter.svg" />
+                            <entry key="width" value="512" />
                           </map>
                         </option>
                       </PersistentState>

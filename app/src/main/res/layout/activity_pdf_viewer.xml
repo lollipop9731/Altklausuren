@@ -6,11 +6,21 @@
     android:layout_height="match_parent"
     tools:context="com.example.loren.altklausurenneu.PdfViewer">
 
+    <com.github.chrisbanes.photoview.PhotoView
+        android:id="@+id/photo_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+
+
     <com.github.barteksc.pdfviewer.PDFView
         android:id="@+id/pdfView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        />
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true" >
+
+    </com.github.barteksc.pdfviewer.PDFView>
 
     <ProgressBar
         android:id="@+id/progressBar"

@@ -2,6 +2,7 @@ package com.example.loren.altklausurenneu;
 
 import android.app.Activity;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -29,6 +30,9 @@ import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
+
+
+
 import com.google.firebase.auth.FirebaseAuth;
 
 import com.google.firebase.database.DataSnapshot;
@@ -49,6 +53,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import io.fotoapparat.Fotoapparat;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
 public class MainActivity extends AppCompatActivity
@@ -66,6 +71,7 @@ public class MainActivity extends AppCompatActivity
     private static final String DATABASE_NAME = "name";
     private static final String DOWNLOAD_URL_BUNDLE = "downloadurl";
     static final int REQUEST_TAKE_PHOTO = 1;
+    static final int REQUEST_TAKE_PHOTO_PIX = 2;
     private static final String BUNDLE_DOWNLOAD_URL = "url";
 
     //code for ReadFile
@@ -80,6 +86,7 @@ public class MainActivity extends AppCompatActivity
     private ArrayList<Exam> exams;
     private FirebaseMethods firebaseMethods;
 
+    Context context;
     @Override
     public void startActivityForResult(Intent intent, int requestCode) {
         super.startActivityForResult(intent, requestCode);
@@ -109,7 +116,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
+        context = getApplicationContext();
 
         rootview = findViewById(android.R.id.content);
 
@@ -150,12 +157,18 @@ public class MainActivity extends AppCompatActivity
             public boolean onMenuItemSelected(MenuItem menuItem) {
                 //Action here
                 switch (menuItem.getItemId()) {
+                    //upload file from phone
                     case R.id.menu_upload:
 
                         FileSearch();
                         break;
+
+                    //take photo
                     case R.id.menu_uploadtip:
-                        TakePictureIntent();
+                       Intent intent = new Intent(MainActivity.this,PhotoViewer.class);
+                       startActivity(intent);
+                       // TakePictureIntent();
+
                         break;
                 }
 
@@ -189,7 +202,7 @@ public class MainActivity extends AppCompatActivity
                         Intent intent = new Intent(MainActivity.this, PdfViewer.class);
                         Log.d(TAG,"Current Download: "+ current.getDownloadurl());
                         intent.putExtra(BUNDLE_DOWNLOAD_URL,current.getDownloadurl());
-//todo open intent with glide, if not pdf but jpg
+                        //todo open intent with glide, if not pdf but jpg
                         startActivity(intent);
 
 
@@ -399,11 +412,20 @@ public class MainActivity extends AppCompatActivity
                 Log.d(TAG,"Photo file:" +mCurrentPhotoPath);
                 File file = new File(mCurrentPhotoPath);
                 Uri uri = Uri.fromFile(file);
+
+            // new try :
+                Intent intent = new Intent(getApplicationContext(),PhotoViewer.class);
+                intent.setData(uri);
+                startActivity(intent);
+
+
+
                 Log.d(TAG,"Current Uri: "+uri.toString());
 
-                setFileData(uri);
+                //todo maybe uncomment!!
+              /*  setFileData(uri);
                 exam.setFilepath(".jpg");
-                showDialog();
+                showDialog();*/
 
         }
     }
@@ -620,6 +642,10 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
+
+
+
 
 
 }

@@ -16,7 +16,7 @@
         <activity
             android:name=".MainActivity"
             android:label="Mathe I"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
+            android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".WebViewclass" />
         <activity
             android:name=".Login"
@@ -51,7 +51,9 @@
                 android:resource="@xml/file_provider_paths" />
         </provider>
 
-        <activity android:name=".PdfViewer"></activity>
+        <activity android:name=".PdfViewer" />
+        <activity android:name=".PhotoViewer"
+            android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 
 </manifest>
