@@ -7,15 +7,18 @@ import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
@@ -23,6 +26,8 @@ import com.example.loren.altklausurenneu.Utils.GalleryRow;
 import com.example.loren.altklausurenneu.Utils.GlideApp;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.text.Format;
@@ -32,6 +37,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
+import butterknife.internal.Utils;
 import io.fotoapparat.Fotoapparat;
 import io.fotoapparat.parameter.ScaleType;
 import io.fotoapparat.result.BitmapPhoto;
@@ -48,6 +54,15 @@ public class PhotoViewer extends AppCompatActivity {
     @BindView(R.id.imagePreview)
     ImageView mFullscreenImage;
 
+    @BindView(R.id.textnumberofPhotos)
+    Button mNumberofPhotos;
+
+    @OnClick(R.id.textnumberofPhotos)
+    public void onClick(){
+
+        passFilePath();
+    }
+
     @BindView(R.id.camera_view)
     CameraView cameraView;
 
@@ -55,11 +70,13 @@ public class PhotoViewer extends AppCompatActivity {
     Button TakeFoto;
     int counter = 0;
     GalleryRow galleryRow;
+
     ArrayList<ImageView>imageViews;
     RelativeLayout relativeLayout;
 
 
     Fotoapparat mfotoapparat;
+    ArrayList<String>filepaths;
 
     @Override
     protected void onStart() {
@@ -72,19 +89,26 @@ public class PhotoViewer extends AppCompatActivity {
         mfotoapparat.stop();
     }
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_photo_viewer);
         imageViews = new ArrayList<>();
+        filepaths = new ArrayList<>();
+
+
 
         relativeLayout = (RelativeLayout)findViewById(R.id.layout_photoviewer);
 
-
         ButterKnife.bind(this);
+        //show button only if first photo is taken
+        mNumberofPhotos.setVisibility(View.INVISIBLE);
+
         newFotoapparat();
 
         TakeFoto.setOnClickListener(new View.OnClickListener() {
@@ -93,6 +117,16 @@ public class PhotoViewer extends AppCompatActivity {
                PhotoResult photoResult = mfotoapparat.takePicture();
                counter++;
 
+               String outputfile = Environment.getExternalStorageDirectory().getAbsolutePath();
+               outputfile += "/"+Long.toString(System.currentTimeMillis())+ ".jpeg";
+               File file = new File(outputfile);
+               photoResult.saveToFile(file);
+               filepaths.add(outputfile);
+
+
+
+
+
 
                photoResult.toBitmap()
                        .whenAvailable(new Function1<BitmapPhoto, Unit>() {
@@ -100,6 +134,7 @@ public class PhotoViewer extends AppCompatActivity {
                            public Unit invoke(BitmapPhoto bitmapPhoto) {
                                //only call at first shot
                                Log.d(TAG,"Byte count:" + bitmapPhoto.bitmap.getByteCount());
+
 
 
                                BackgroundImageResize imageResize = new BackgroundImageResize();
@@ -129,6 +164,13 @@ public class PhotoViewer extends AppCompatActivity {
 
 
     }
+
+    private void passFilePath(){
+        Intent intent = new Intent(PhotoViewer.this, GalleryView.class);
+        intent.putExtra("Filepath",filepaths);
+        startActivity(intent);
+    }
+
 
 
 
@@ -170,6 +212,7 @@ public class PhotoViewer extends AppCompatActivity {
             Log.d(TAG,"MB before Thumbnail: "+bitmaps[0].getByteCount()/1000000);
             Bitmap thumb = ThumbnailUtils.extractThumbnail(bitmaps[0],100,100);
 
+
             Log.d(TAG,"Size of Thumbnail:" + thumb.getByteCount()/1000000);
 
             return thumb;
@@ -188,6 +231,9 @@ public class PhotoViewer extends AppCompatActivity {
                     galleryRow.addImage(bitmap,imageViews);
                 }
             }
+            mNumberofPhotos.bringToFront();
+            mNumberofPhotos.setVisibility(View.VISIBLE);
+            mNumberofPhotos.setText("    "+counter);
 
         }
 

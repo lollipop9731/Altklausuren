@@ -52,7 +52,10 @@
         </provider>
 
         <activity android:name=".PdfViewer" />
-        <activity android:name=".PhotoViewer"
+        <activity
+            android:name=".PhotoViewer"
+            android:theme="@style/AppTheme.NoActionBar" />
+        <activity android:name=".GalleryView"
             android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 

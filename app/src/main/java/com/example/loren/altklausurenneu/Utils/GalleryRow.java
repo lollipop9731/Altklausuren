@@ -40,7 +40,7 @@ public class GalleryRow extends AppGlideModule {
     private int imagerotation;
     private LinearLayout linearLayout;
 
-    private Glide glide;
+
 
 
 
