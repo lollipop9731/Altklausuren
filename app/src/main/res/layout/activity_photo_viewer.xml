@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:id="@+id/layout_photoviewer"
     android:background="@android:color/black"
     tools:context="com.example.loren.altklausurenneu.PhotoViewer">
 
@@ -26,6 +27,7 @@
         android:layout_marginBottom="106dp"
         android:layout_marginStart="20dp"
         android:scaleType="centerCrop"
+
        />
 
     <io.fotoapparat.view.CameraView

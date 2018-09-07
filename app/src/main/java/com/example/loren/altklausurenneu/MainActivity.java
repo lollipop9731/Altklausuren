@@ -1,6 +1,9 @@
 package com.example.loren.altklausurenneu;
 
 import android.app.Activity;
+
+import android.app.Fragment;
+import android.app.FragmentManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,6 +14,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
@@ -642,6 +646,16 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
+
+    private void ShowCameraFragment(){
+
+
+
+
+
+    }
+
+
 
 
 
