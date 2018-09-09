@@ -1,5 +1,6 @@
 package com.example.loren.altklausurenneu;
 
+import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -7,9 +8,13 @@ import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.animation.AlphaAnimation;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.glide.slider.library.Animations.BaseAnimationInterface;
 import com.glide.slider.library.Indicators.PagerIndicator;
 import com.glide.slider.library.SliderLayout;
 import com.glide.slider.library.SliderTypes.BaseSliderView;
@@ -27,6 +32,7 @@ import io.github.yavski.fabspeeddial.FabSpeedDial;
 public class GalleryView extends AppCompatActivity implements BaseSliderView.OnSliderClickListener, ViewPagerEx.OnPageChangeListener{
 
     ArrayList<String> filepath;
+    ArrayList<String> thumbpath;
     private String TAG ="GalleryView";
     private SliderLayout mSlider;
     FloatingActionButton floatingActionButton;
@@ -36,26 +42,48 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
 
     @BindView(R.id.deletefoto)
     ImageView deletePhoto;
+
+
     private DefaultSliderView defaultSliderView;
     private int delete;
 
     @OnClick(R.id.deletefoto)
     public void onPhotoDeleted(){
+        //return to camera if only one photo is left
         if(filepath.size()==1){
             onBackPressed();
         }
 
+
         Log.d(TAG,"Size of Array First : " +filepath.size());
         delete = mSlider.getCurrentPosition();
-        Log.d(TAG,"Current Path:" + filepath.get(delete));
+
+        Log.d(TAG, "Current Path:" + filepath.get(delete));
+        //remove file from storage
+        Boolean aBoolean = new File(filepath.get(delete)).delete();
+        Boolean aBoolean2 = new File(filepath.get(delete)).delete();
+        new File(thumbpath.get(delete)).delete();
+        Log.d(TAG, "Deleted file from storage: " + aBoolean + filepath.get(delete));
+        Log.d(TAG, "Deleted Thumb from storage " + aBoolean + thumbpath.get(delete));
+        //remove filepath from array of files
         filepath.remove(delete);
-        Log.d(TAG,"Size of Array : " +filepath.size());
-        mSlider.movePrevPosition();
+        thumbpath.remove(delete);
+
+        Log.d(TAG, "Size of Array : " + filepath.size() + "Size of Thumbs: " + thumbpath.size());
+
+
         mSlider.removeSliderAt(delete);
 
 
 
+    }
 
+    @Override
+    public void onBackPressed() {
+        Intent intent = new Intent(GalleryView.this,PhotoViewer.class);
+        intent.putExtra("Thumbpath",thumbpath);
+
+        startActivity(intent);
 
     }
 
@@ -77,6 +105,7 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
         ButterKnife.bind(this);
         deletePhoto.bringToFront();
 
+
         Bundle bundle = getIntent().getExtras();
 
         mSlider.setPresetTransformer(SliderLayout.Transformer.Default);
@@ -86,6 +115,8 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
 
         if(bundle!=null){
             filepath = bundle.getStringArrayList("Filepath");
+            thumbpath = bundle.getStringArrayList("Thumbpath");
+
 
             Log.d(TAG, "Array with filepath created.");
         }
@@ -117,6 +148,8 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
 
         }
     }
+
+
 
     @Override
     public void onPageScrolled(int i, float v, int i1) {

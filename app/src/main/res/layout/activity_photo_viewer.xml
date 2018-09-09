@@ -9,6 +9,13 @@
     android:background="@android:color/black"
     tools:context="com.example.loren.altklausurenneu.PhotoViewer">
 
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/blinkwhite"
+        android:src="@drawable/take_photo"/>
+
+
     <Button
         android:id="@+id/takefoto"
         android:layout_width="70dp"
@@ -37,8 +44,8 @@
         android:layout_height="50dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:layout_marginBottom="140dp"
-        android:layout_marginStart="40dp"
+        android:layout_marginBottom="155dp"
+        android:layout_marginStart="50dp"
         android:drawableTop="@drawable/ic_check_white_24dp"
         android:drawablePadding="-15dp"
 

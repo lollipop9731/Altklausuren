@@ -21,8 +21,8 @@
     <dimen name="field_width_standard">160dp</dimen>
 
     <!-- GalleryRow -->
-    <dimen name="width_galleryrow">60dp</dimen>
-    <dimen name="height_galleryrow">60dp</dimen>
+    <dimen name="width_galleryrow">70dp</dimen>
+    <dimen name="height_galleryrow">70dp</dimen>
     <dimen name="margin_bottom_galleryrow">110dp</dimen>
 
 

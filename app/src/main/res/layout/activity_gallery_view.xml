@@ -8,6 +8,7 @@
     tools:context="com.example.loren.altklausurenneu.GalleryView">
 
 
+
     <ImageView
         android:id="@+id/deletefoto"
         android:layout_width="wrap_content"
