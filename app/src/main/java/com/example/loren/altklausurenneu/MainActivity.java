@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity
 
 
 //todo clear this interface chaos
+    //todo delete all files on create -> thumbnails and full photos
 
     ListView listViewExam;
     FabSpeedDial fabSpeedDial;
@@ -601,58 +602,6 @@ public class MainActivity extends AppCompatActivity
 
     public Uri getFileData() {
         return this.fileData;
-    }
-
-    private File createImageFile() throws IOException{
-
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-
-        // Save a file: path for use with ACTION_VIEW intents
-        mCurrentPhotoPath = image.getAbsolutePath();
-        return image;
-    }
-
-    private void TakePictureIntent(){
-
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-
-        // Ensure that there's a camera activity to handle the intent
-        if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-            // Create the File where the photo should go
-            File photoFile = null;
-            try {
-                photoFile = createImageFile();
-            } catch (IOException ex) {
-                // Error occurred while creating the File
-                Log.d(TAG,"File for image could not be created: "+ex.getLocalizedMessage());
-            }
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-                Log.d(TAG,"File for image successfully created.");
-                Uri photoURI = FileProvider.getUriForFile(this,
-                        BuildConfig.APPLICATION_ID,
-                        photoFile);
-                //get uri for photo for content provider
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                startActivityForResult(takePictureIntent, REQUEST_TAKE_PHOTO);
-            }
-        }
-    }
-
-    private void ShowCameraFragment(){
-
-
-
-
-
     }
 
 

@@ -46,6 +46,8 @@ dependencies {
     implementation 'io.fotoapparat:fotoapparat:2.3.3'
     implementation 'com.github.firdausmaulan:GlideSlider:1.3.2'
 
+    implementation 'com.itextpdf:itextg:5.5.10'
+
 
 }
 apply plugin: 'com.google.gms.google-services'

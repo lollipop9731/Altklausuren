@@ -1,6 +1,8 @@
 package com.example.loren.altklausurenneu;
 
 import android.content.Intent;
+import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -20,8 +22,17 @@ import com.glide.slider.library.SliderLayout;
 import com.glide.slider.library.SliderTypes.BaseSliderView;
 import com.glide.slider.library.SliderTypes.DefaultSliderView;
 import com.glide.slider.library.Tricks.ViewPagerEx;
+import com.google.android.gms.tasks.Continuation;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.storage.UploadTask;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Image;
+import com.itextpdf.text.pdf.PdfWriter;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import butterknife.BindView;
@@ -35,6 +46,8 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
     ArrayList<String> thumbpath;
     private String TAG ="GalleryView";
     private SliderLayout mSlider;
+    private static final String INTENT_THUMBNAILS_PATH = "Thumbpath";
+    private static final String INTENT_PHOTOS_PATH = "Filepath";
     FloatingActionButton floatingActionButton;
     int currentpage;
     Boolean clickeddelete = false;
@@ -49,10 +62,7 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
 
     @OnClick(R.id.deletefoto)
     public void onPhotoDeleted(){
-        //return to camera if only one photo is left
-        if(filepath.size()==1){
-            onBackPressed();
-        }
+
 
 
         Log.d(TAG,"Size of Array First : " +filepath.size());
@@ -61,18 +71,26 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
         Log.d(TAG, "Current Path:" + filepath.get(delete));
         //remove file from storage
         Boolean aBoolean = new File(filepath.get(delete)).delete();
-        Boolean aBoolean2 = new File(filepath.get(delete)).delete();
+        Boolean aBoolean2 = new File(thumbpath.get(delete)).delete();
         new File(thumbpath.get(delete)).delete();
         Log.d(TAG, "Deleted file from storage: " + aBoolean + filepath.get(delete));
-        Log.d(TAG, "Deleted Thumb from storage " + aBoolean + thumbpath.get(delete));
+        Log.d(TAG, "Deleted Thumb from storage " + aBoolean2 + thumbpath.get(delete));
         //remove filepath from array of files
         filepath.remove(delete);
         thumbpath.remove(delete);
 
-        Log.d(TAG, "Size of Array : " + filepath.size() + "Size of Thumbs: " + thumbpath.size());
+        Log.d(TAG, "Size of Array : " + filepath.size() + " Size of Thumbs: " + thumbpath.size());
+
+        //true, so only a special intent on back pressed is called, when set to true
 
 
         mSlider.removeSliderAt(delete);
+
+        //return to camera if only one photo is left
+        clickeddelete = true;
+        if(filepath.size()==0){
+            onBackPressed();
+        }
 
 
 
@@ -80,14 +98,25 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent(GalleryView.this,PhotoViewer.class);
-        intent.putExtra("Thumbpath",thumbpath);
+        //only put intent when user has changed a thing
+        if(clickeddelete){
+            //pass lists with file path of big photo and thumbnails
+            Intent intent = new Intent(GalleryView.this,PhotoViewer.class);
+            intent.putExtra(INTENT_THUMBNAILS_PATH,thumbpath);
+            intent.putExtra(INTENT_PHOTOS_PATH,filepath);
+            startActivity(intent);
+            Log.d(TAG,"Photos were changed -> pass new filepaths");
+        }else{
+            super.onBackPressed();
+            Log.d(TAG,"No changes detected.");
+        }
 
-        startActivity(intent);
+
+
 
     }
 
-    //todo delete page if delete pressed
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -128,6 +157,8 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
             @Override
             public void onClick(View v) {
                 Toast.makeText(getApplicationContext(),"Upload gestartet",Toast.LENGTH_SHORT).show();
+
+                CreatePDF(filepath);
             }
         });
 
@@ -158,8 +189,53 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
 
     @Override
     public void onSliderClick(BaseSliderView baseSliderView) {
-    Log.d(TAG,"Clicked: " + baseSliderView.getBundle().get("path"));
 
+
+    }
+
+    private void CreatePDF(ArrayList<String> stringArrayList){
+        //create PDF from Images
+        Document document = new Document();
+        FileOutputStream stream;
+        String filepathstring = getApplicationContext().getExternalFilesDir("documents/pdf").toString();
+        filepathstring += "/" + Long.toString(System.currentTimeMillis()) +".pdf";
+        File file = new File(filepathstring);
+
+        try{
+            //create new Outputstream
+            stream = new FileOutputStream(file);
+            PdfWriter.getInstance(document,stream);
+            //add image by filepath to the document -> first only one image
+            Image image = Image.getInstance(stringArrayList.get(0));
+            document.open();
+            document.setPageSize(image);
+            image.setAbsolutePosition(0,0);
+//todo scale image correctly
+
+            image.scaleToFit(1080,1920);
+            image.setRotationDegrees(-90f);
+            document.add(image);
+        }catch (DocumentException|IOException e){
+            e.printStackTrace();
+        }finally {
+            document.close();
+            //upload to firebase Database
+            FirebaseMethods firebaseMethods = new FirebaseMethods(getApplicationContext());
+            Uri uri = Uri.fromFile(file);
+            firebaseMethods.uploadFileToStorageNEW(uri,".pdf");
+            firebaseMethods.setMethodsInter(new FirebaseMethods.FireBaseMethodsInter() {
+                @Override
+                public void onUploadSuccess(String filepath, String downloadurl) {
+                    Log.d(TAG,"Erstelltes PDF erfolgreich hochgeladen.");
+                }
+
+                @Override
+                public void onDownloadSuccess(Boolean downloaded) {
+
+                }
+            });
+
+        }
     }
 
     @Override

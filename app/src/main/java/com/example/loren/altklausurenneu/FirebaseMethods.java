@@ -168,6 +168,11 @@ public class FirebaseMethods {
     }
 
 
+    /**
+     *
+     * @param data Uri to be uploaded
+     * @param type .pdf for PDF
+     */
     public void uploadFileToStorageNEW(Uri data, String type) {
 
 

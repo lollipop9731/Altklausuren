@@ -58,7 +58,9 @@ public class PhotoViewer extends AppCompatActivity {
 
 
     private static final String TAG = "PhotoViewer";
-    private Bitmap mThumbBitmap;
+    private static final String INTENT_THUMBNAILS_PATH = "Thumbpath";
+    private static final String INTENT_PHOTOS_PATH = "Filepath";
+
     @BindView(R.id.imagePreview)
     ImageView mFullscreenImage;
 
@@ -67,12 +69,14 @@ public class PhotoViewer extends AppCompatActivity {
 
     @BindView(R.id.blinkwhite)
     ImageView fotoAnimation;
-    private ArrayList<String> bitmapath;
+    private ArrayList<String> thumbnailpath;
 
     @OnClick(R.id.textnumberofPhotos)
     public void onClick() {
 
         passFilePath();
+        Log.d(TAG, "Number of Filepath: " +filepaths.size());
+        Log.d(TAG, "Number of Thumpaths: " +thumbnailpath.size());
     }
 
     @BindView(R.id.camera_view)
@@ -83,7 +87,7 @@ public class PhotoViewer extends AppCompatActivity {
     int counter = 0;
     GalleryRow galleryRow;
 
-    ArrayList<ImageView> imageViews;
+
     RelativeLayout relativeLayout;
 
 
@@ -111,9 +115,9 @@ public class PhotoViewer extends AppCompatActivity {
 
 
         setContentView(R.layout.activity_photo_viewer);
-        imageViews = new ArrayList<>();
+
         filepaths = new ArrayList<>();
-        bitmapath = new ArrayList<>();
+        thumbnailpath = new ArrayList<>();
 
         relativeLayout = (RelativeLayout) findViewById(R.id.layout_photoviewer);
 
@@ -123,10 +127,12 @@ public class PhotoViewer extends AppCompatActivity {
 
         Bundle bundle = getIntent().getExtras();
         if(bundle!=null){
-            bitmapath = bundle.getStringArrayList("Thumbpath");
-            galleryRow.updateImages(bitmapath,0);
+            //bundle with information from Gallery View -> so the right number of thumbs is displayed
+            thumbnailpath = bundle.getStringArrayList(INTENT_THUMBNAILS_PATH);
+            filepaths = bundle.getStringArrayList(INTENT_PHOTOS_PATH);
+            galleryRow.updateImages(thumbnailpath,0);
             mNumberofPhotos.bringToFront();
-            counter = bitmapath.size();
+            counter = thumbnailpath.size();
             mNumberofPhotos.setVisibility(View.VISIBLE);
             mNumberofPhotos.setText("    " + counter);
             Log.d(TAG,"Bundle send");
@@ -147,6 +153,7 @@ public class PhotoViewer extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 PhotoResult photoResult = mfotoapparat.takePicture();
+                //counter for amount of photos
                 counter++;
 
                 //save fotos to file, if they should be uploaded later
@@ -197,6 +204,7 @@ public class PhotoViewer extends AppCompatActivity {
 
         }
         filepaths.clear();
+        thumbnailpath.clear();
         mfotoapparat.stop();
         Intent intent = new Intent(PhotoViewer.this,MainActivity.class);
 
@@ -206,7 +214,7 @@ public class PhotoViewer extends AppCompatActivity {
     private void passFilePath() {
         Intent intent = new Intent(PhotoViewer.this, GalleryView.class);
         intent.putExtra("Filepath", filepaths);
-        intent.putExtra("Thumbpath",bitmapath);
+        intent.putExtra("Thumbpath",thumbnailpath);
         startActivity(intent);
     }
 
@@ -295,12 +303,13 @@ public class PhotoViewer extends AppCompatActivity {
          * @param bitmap
          */
         private void cacheBitmaps(Bitmap bitmap) {
-            File f3 = new File(getApplicationContext().getExternalFilesDir("images/temp/bitmap/").toString());
+
+            File f3 = new File(getApplicationContext().getExternalFilesDir("images/temp/bitmap").toString());
             if(!f3.exists()){
                 f3.mkdirs();
             }
             OutputStream outputStream = null;
-            File file = new File(getApplicationContext().getExternalFilesDir("images/temp/bitmap/")  + Long.toString(System.currentTimeMillis())+".png");
+            File file = new File(getApplicationContext().getExternalFilesDir("images/temp/bitmap")  + Long.toString(System.currentTimeMillis())+".png");
 
             try {
                 outputStream = new FileOutputStream(file);
@@ -323,7 +332,7 @@ public class PhotoViewer extends AppCompatActivity {
 
             }
             //add path to array for later delete
-            bitmapath.add(file.getAbsolutePath());
+            thumbnailpath.add(file.getAbsolutePath());
 
 
         }
