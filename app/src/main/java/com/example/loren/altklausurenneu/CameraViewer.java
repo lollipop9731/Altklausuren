@@ -1,20 +1,13 @@
 package com.example.loren.altklausurenneu;
 
-import android.animation.LayoutTransition;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
-import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.AlphaAnimation;
@@ -23,41 +16,36 @@ import android.view.animation.AnimationSet;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
-import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
 import com.example.loren.altklausurenneu.Utils.GalleryRow;
-import com.example.loren.altklausurenneu.Utils.GlideApp;
+import com.google.firebase.auth.FirebaseAuth;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Array;
-import java.nio.file.Files;
-import java.text.Format;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 
-import butterknife.internal.Utils;
+import id.zelory.compressor.Compressor;
 import io.fotoapparat.Fotoapparat;
-import io.fotoapparat.parameter.ScaleType;
 import io.fotoapparat.result.BitmapPhoto;
 import io.fotoapparat.result.PhotoResult;
 import io.fotoapparat.view.CameraView;
+import io.reactivex.Scheduler;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
 
-public class PhotoViewer extends AppCompatActivity {
+public class CameraViewer extends AppCompatActivity {
 
 
-    private static final String TAG = "PhotoViewer";
+    private static final String TAG = "CameraViewer";
     private static final String INTENT_THUMBNAILS_PATH = "Thumbpath";
     private static final String INTENT_PHOTOS_PATH = "Filepath";
 
@@ -70,6 +58,8 @@ public class PhotoViewer extends AppCompatActivity {
     @BindView(R.id.blinkwhite)
     ImageView fotoAnimation;
     private ArrayList<String> thumbnailpath;
+    private File originalimage;
+    private String filepath;
 
     @OnClick(R.id.textnumberofPhotos)
     public void onClick() {
@@ -93,6 +83,7 @@ public class PhotoViewer extends AppCompatActivity {
 
     Fotoapparat mfotoapparat;
     ArrayList<String> filepaths;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onStart() {
@@ -157,11 +148,19 @@ public class PhotoViewer extends AppCompatActivity {
                 counter++;
 
                 //save fotos to file, if they should be uploaded later
-                String filepath = getApplicationContext().getExternalFilesDir("images/temp").toString();
+                filepath = getApplicationContext().getExternalFilesDir("images/temp").toString();
 
                 filepath += "/"+ Long.toString(System.currentTimeMillis()) + ".jpeg";
-                File file = new File(filepath);
-                photoResult.saveToFile(file);
+                originalimage = new File(filepath);
+                photoResult.saveToFile(originalimage);
+
+
+
+
+
+
+
+
                 Log.d(TAG,"Saved to path:" +filepath);
 
                 //collect all filepath in an array
@@ -206,13 +205,13 @@ public class PhotoViewer extends AppCompatActivity {
         filepaths.clear();
         thumbnailpath.clear();
         mfotoapparat.stop();
-        Intent intent = new Intent(PhotoViewer.this,MainActivity.class);
+        Intent intent = new Intent(CameraViewer.this,MainActivity.class);
 
         startActivity(intent);
     }
 
     private void passFilePath() {
-        Intent intent = new Intent(PhotoViewer.this, GalleryView.class);
+        Intent intent = new Intent(CameraViewer.this, GalleryView.class);
         intent.putExtra("Filepath", filepaths);
         intent.putExtra("Thumbpath",thumbnailpath);
         startActivity(intent);
@@ -269,13 +268,26 @@ public class PhotoViewer extends AppCompatActivity {
         protected Bitmap doInBackground(Bitmap... bitmaps) {
             Log.d(TAG, "doInBackgorund started");
 
-
-            Log.d(TAG, "MB before Thumbnail: " + bitmaps[0].getByteCount() / 1000000);
             Bitmap thumb = ThumbnailUtils.extractThumbnail(bitmaps[0], 100, 100);
             cacheBitmaps(thumb);
 
+            //compress saved file
 
-            Log.d(TAG, "Size of Thumbnail:" + thumb.getByteCount() / 1000000);
+            //filepath of compressed file //todo move to when images getting uploaded
+            filepath = getApplicationContext().getExternalFilesDir("images/temp").toString();
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date = new Date();
+            filepath += "/"+ dateFormat.format(date) + ".jpeg";
+            File compressedImage = new File(filepath);
+            try{
+                compressedImage = new Compressor(getApplicationContext()).compressToFile(originalimage);
+                Log.d(TAG,"Size of compressed file: "+compressedImage.length() / 1000);
+                Log.d(TAG,"File saved to: " +filepath);
+            }catch (IOException e){
+                e.printStackTrace();
+                Log.d(TAG,"Image could not be compressed.");
+            }
+
 
             return thumb;
         }

@@ -167,7 +167,7 @@ public class FirebaseMethods {
 
     }
 
-
+//todo better method here -> type is unnecessary
     /**
      *
      * @param data Uri to be uploaded
@@ -334,7 +334,7 @@ public class FirebaseMethods {
 
     public interface FireBaseMethodsInter {
         void onUploadSuccess(String filepath, String downloadurl);
-
+        //todo do we still need onDownloadSuccess? maybe new interface
         void onDownloadSuccess(Boolean downloaded);
     }
 

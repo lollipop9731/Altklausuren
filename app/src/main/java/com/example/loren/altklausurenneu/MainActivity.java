@@ -2,20 +2,14 @@ package com.example.loren.altklausurenneu;
 
 import android.app.Activity;
 
-import android.app.Fragment;
-import android.app.FragmentManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -28,9 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
-import android.webkit.WebView;
 import android.widget.AdapterView;
-import android.widget.ExpandableListView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
@@ -50,14 +42,8 @@ import com.google.firebase.storage.UploadTask;
 
 
 import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 
-import io.fotoapparat.Fotoapparat;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
 public class MainActivity extends AppCompatActivity
@@ -170,7 +156,7 @@ public class MainActivity extends AppCompatActivity
 
                     //take photo
                     case R.id.menu_uploadtip:
-                       Intent intent = new Intent(MainActivity.this,PhotoViewer.class);
+                       Intent intent = new Intent(MainActivity.this,CameraViewer.class);
                        startActivity(intent);
                        // TakePictureIntent();
 
@@ -419,7 +405,7 @@ public class MainActivity extends AppCompatActivity
                 Uri uri = Uri.fromFile(file);
 
             // new try :
-                Intent intent = new Intent(getApplicationContext(),PhotoViewer.class);
+                Intent intent = new Intent(getApplicationContext(),CameraViewer.class);
                 intent.setData(uri);
                 startActivity(intent);
 

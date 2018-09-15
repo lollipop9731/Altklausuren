@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 
 import com.github.barteksc.pdfviewer.PDFView;
@@ -96,9 +97,15 @@ public class PdfViewer extends AppCompatActivity {
         @Override
         protected void onPostExecute(InputStream inputStream) {
             //load pdf from stream
-            mpdfViewer.fromStream(inputStream).load();
-            progressBar.setVisibility(View.GONE);
-            Log.d(TAG,"Stream: "+inputStream.toString());
+            if(inputStream!=null){
+                mpdfViewer.fromStream(inputStream).load();
+                progressBar.setVisibility(View.GONE);
+                Log.d(TAG,"Stream: "+inputStream.toString());
+            }else{
+                Log.d(TAG,"File not found");
+                Toast.makeText(getApplicationContext(),"PDF nicht gefunden",Toast.LENGTH_SHORT).show();
+            }
+
 
         }
     }
