@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 
 import com.github.barteksc.pdfviewer.PDFView;
+import com.github.barteksc.pdfviewer.listener.OnPageChangeListener;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -28,37 +29,40 @@ public class PdfViewer extends AppCompatActivity {
     ImageView mimageView;
 
     String url;
-     final static String TAG = "PdfViewer";
+    final static String TAG = "PdfViewer";
     private static final String BUNDLE_DOWNLOAD_URL = "url";
     private ProgressBar progressBar;
+    private Toast toast;
 
+
+    @Override
+    public void onBackPressed() {
+        toast.cancel();
+        super.onBackPressed();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pdf_viewer);
 
-        mpdfViewer = (PDFView)findViewById(R.id.pdfView);
-
+        mpdfViewer = (PDFView) findViewById(R.id.pdfView);
 
 
         Bundle bundle = getIntent().getExtras();
-        if(bundle!=null){
+        if (bundle != null) {
             //get url from MainActivity
             url = getIntent().getStringExtra(BUNDLE_DOWNLOAD_URL);
-            Log.d(TAG, "DownloadUrl: "+url);
+            Log.d(TAG, "DownloadUrl: " + url);
         }
-        progressBar = (ProgressBar)findViewById(R.id.progressBar);
+        progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
 
         new RetrievePDFStream().execute(url);
-       //new RetrieveJPGStream().execute(url);
-
-
+        //new RetrieveJPGStream().execute(url);
 
 
     }
-
 
 
     //todo add progress circle
@@ -86,8 +90,8 @@ public class PdfViewer extends AppCompatActivity {
                 }
 
 
-            }catch (IOException e){
-                Log.d(TAG,"Could not get Input Stream: "+ e.getMessage());
+            } catch (IOException e) {
+                Log.d(TAG, "Could not get Input Stream: " + e.getMessage());
                 return null;
 
             }
@@ -97,13 +101,26 @@ public class PdfViewer extends AppCompatActivity {
         @Override
         protected void onPostExecute(InputStream inputStream) {
             //load pdf from stream
-            if(inputStream!=null){
-                mpdfViewer.fromStream(inputStream).load();
+            if (inputStream != null) {
+                mpdfViewer.fromStream(inputStream)
+                        .swipeHorizontal(true)
+                        .spacing(4)
+                        .onPageChange(new OnPageChangeListener() {
+                            @Override
+                            public void onPageChanged(int page, int pageCount) {
+                                toast = Toast.makeText(getApplicationContext(),"Seite "+(page +1) + " von " +pageCount,Toast.LENGTH_SHORT );
+                                toast.show();
+
+
+                            }
+                        })
+
+                        .load();
                 progressBar.setVisibility(View.GONE);
-                Log.d(TAG,"Stream: "+inputStream.toString());
-            }else{
-                Log.d(TAG,"File not found");
-                Toast.makeText(getApplicationContext(),"PDF nicht gefunden",Toast.LENGTH_SHORT).show();
+                Log.d(TAG, "Stream: " + inputStream.toString());
+            } else {
+                Log.d(TAG, "File not found");
+                Toast.makeText(getApplicationContext(), "PDF nicht gefunden", Toast.LENGTH_SHORT).show();
             }
 
 
@@ -111,12 +128,12 @@ public class PdfViewer extends AppCompatActivity {
     }
 
 
-    class RetrieveJPGStream extends AsyncTask<String,Void,Bitmap>{
+    class RetrieveJPGStream extends AsyncTask<String, Void, Bitmap> {
         private BufferedInputStream inputStream;
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
-            Drawable  drawable =new  BitmapDrawable(getResources(),bitmap);
+            Drawable drawable = new BitmapDrawable(getResources(), bitmap);
             progressBar.setVisibility(View.GONE);
 
         }
@@ -125,7 +142,7 @@ public class PdfViewer extends AppCompatActivity {
         protected Bitmap doInBackground(String... strings) {
             Bitmap bitmap = null;
 
-            try{
+            try {
                 URL url = new URL(strings[0]);
                 HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
                 //open if status is OK
@@ -133,8 +150,8 @@ public class PdfViewer extends AppCompatActivity {
                     inputStream = new BufferedInputStream(httpURLConnection.getInputStream());
                     bitmap = BitmapFactory.decodeStream(inputStream);
                 }
-            }catch (IOException e){
-                Log.d(TAG,"Could not get JPEG INput stream");
+            } catch (IOException e) {
+                Log.d(TAG, "Could not get JPEG INput stream");
                 return null;
             }
             return bitmap;

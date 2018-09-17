@@ -268,25 +268,10 @@ public class CameraViewer extends AppCompatActivity {
         protected Bitmap doInBackground(Bitmap... bitmaps) {
             Log.d(TAG, "doInBackgorund started");
 
+            //get thumbnail to display on Camera Preview
             Bitmap thumb = ThumbnailUtils.extractThumbnail(bitmaps[0], 100, 100);
             cacheBitmaps(thumb);
 
-            //compress saved file
-
-            //filepath of compressed file //todo move to when images getting uploaded
-            filepath = getApplicationContext().getExternalFilesDir("images/temp").toString();
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            Date date = new Date();
-            filepath += "/"+ dateFormat.format(date) + ".jpeg";
-            File compressedImage = new File(filepath);
-            try{
-                compressedImage = new Compressor(getApplicationContext()).compressToFile(originalimage);
-                Log.d(TAG,"Size of compressed file: "+compressedImage.length() / 1000);
-                Log.d(TAG,"File saved to: " +filepath);
-            }catch (IOException e){
-                e.printStackTrace();
-                Log.d(TAG,"Image could not be compressed.");
-            }
 
 
             return thumb;

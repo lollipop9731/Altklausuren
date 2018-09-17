@@ -25,8 +25,7 @@ import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-
-
+import android.widget.Toast;
 
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -78,6 +77,8 @@ public class MainActivity extends AppCompatActivity
     private FirebaseMethods firebaseMethods;
 
     Context context;
+    private int counter = 0;
+
     @Override
     public void startActivityForResult(Intent intent, int requestCode) {
         super.startActivityForResult(intent, requestCode);
@@ -270,10 +271,19 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
+        counter++;
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
+            if (counter > 1) {
+                Intent intent = new Intent(Intent.ACTION_MAIN);
+                intent.addCategory(Intent.CATEGORY_HOME);
+                startActivity(intent);
+            } else {
+                Toast.makeText(getApplicationContext(), "Nochmaliges Drücken beendet die App.", Toast.LENGTH_SHORT).show();
+            }
+
 
         }
     }
@@ -533,6 +543,16 @@ public class MainActivity extends AppCompatActivity
     public void init() {
 
         downloaded = false;
+
+        //delete all temp pictures if some are left
+        File dir = new File(getApplicationContext().getExternalFilesDir("images/temp").toString());
+        if(dir.isDirectory()){
+            String [] children = dir.list();
+            for(int i = 0;i< children.length;i++){
+                Boolean deleted = new File(dir,children[i]).delete();
+                Log.d(TAG,"Files on created deleted: "+deleted);
+            }
+        }
 
 
         exam = new Exam();

@@ -51,7 +51,8 @@
                 android:resource="@xml/file_provider_paths" />
         </provider>
 
-        <activity android:name=".PdfViewer" />
+        <activity android:name=".PdfViewer"
+            android:theme="@style/AppTheme.NoActionBar"/>
         <activity
             android:name=".CameraViewer"
             android:theme="@style/AppTheme.NoActionBar" />
