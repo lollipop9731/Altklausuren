@@ -68,9 +68,11 @@
                           <map>
                             <entry key="assetSourceType" value="FILE" />
                             <entry key="color" value="ffffff" />
-                            <entry key="outputName" value="ic_baseline_delete_forever_24px" />
+                            <entry key="height" value="30" />
+                            <entry key="outputName" value="ic_flash_on_indicator" />
                             <entry key="overrideSize" value="true" />
-                            <entry key="sourceFile" value="C:\Users\loren\OneDrive\Sonstiges\Altklausuren App\Ressourcen\SVG\baseline-delete_forever-24px.svg" />
+                            <entry key="sourceFile" value="C:\Users\loren\OneDrive\Sonstiges\Altklausuren App\Ressourcen\SVG\flash-on-indicator.svg" />
+                            <entry key="width" value="30" />
                           </map>
                         </option>
                       </PersistentState>

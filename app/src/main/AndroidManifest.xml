@@ -58,6 +58,8 @@
             android:theme="@style/AppTheme.NoActionBar" />
         <activity android:name=".GalleryView"
             android:theme="@style/AppTheme.NoActionBar"/>
+        <activity android:name=".Utils.SampleCamera"
+            android:theme="@style/AppTheme.NoActionBar"/>
     </application>
 
 </manifest>

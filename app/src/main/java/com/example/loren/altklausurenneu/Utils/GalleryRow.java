@@ -61,10 +61,12 @@ public class GalleryRow extends AppGlideModule {
 
         ScrollView.LayoutParams scrollparams = new ScrollView.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         scrollparams.gravity = Gravity.BOTTOM;
-        scrollparams.topMargin = 500;
+        float density = context.getResources().getDisplayMetrics().density;
+        float marginindp = 440 * density;
+         scrollparams.topMargin = (int)marginindp;
         scrollView.setLayoutParams(scrollparams);
 
-        scrollView.bringToFront();
+        //scrollView.bringToFront();
         parentlayout.addView(scrollView);
 
 

@@ -28,6 +28,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 
+import com.example.loren.altklausurenneu.Utils.SampleCamera;
 import com.google.firebase.auth.FirebaseAuth;
 
 import com.google.firebase.database.DataSnapshot;
@@ -158,6 +159,7 @@ public class MainActivity extends AppCompatActivity
                     //take photo
                     case R.id.menu_uploadtip:
                        Intent intent = new Intent(MainActivity.this,CameraViewer.class);
+                       Toast.makeText(getApplicationContext(),"all",12);
                        startActivity(intent);
                        // TakePictureIntent();
 
@@ -487,6 +489,7 @@ public class MainActivity extends AppCompatActivity
 
             examDialog.show(getFragmentManager(), NewExamDialog.TAG);
         }
+        //todo dont need jpg anymore
         if(exam.getFilepath().contains(".jpg")){
             final NewExamDialog examDialog = DialogFactory.makeJPEGExamDialog(R.string.dialog_title,
                     R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {

@@ -4,10 +4,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
+    android:background="#282828"
     android:id="@+id/layout_photoviewer"
-    android:background="@android:color/black"
-    tools:context="com.example.loren.altklausurenneu.CameraViewer">
+    tools:activity="com.example.loren.altklausurenneu.CameraViewer">
+
+    <io.fotoapparat.view.CameraView
+        android:id="@+id/camera_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+        <!--For tap to focus-->
+        <io.fotoapparat.view.FocusView
+            android:id="@+id/focusView"
+            android:layout_width="500dp"
+            android:layout_height="500dp" />
+
+
+    </io.fotoapparat.view.CameraView>
 
     <ImageView
         android:layout_width="match_parent"
@@ -56,14 +70,15 @@
 
         android:background="@drawable/circle_numberofphotos"/>
 
-    <io.fotoapparat.view.CameraView
-        android:id="@+id/camera_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentStart="true">
-
-    </io.fotoapparat.view.CameraView>
+    <ImageView
+        android:id="@+id/flash"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginEnd="18dp"
+        android:layout_marginTop="13dp"
+         />
 
 
 </RelativeLayout>

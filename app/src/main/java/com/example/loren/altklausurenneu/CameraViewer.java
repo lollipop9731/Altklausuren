@@ -1,6 +1,7 @@
 package com.example.loren.altklausurenneu;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.media.ThumbnailUtils;
 import android.os.AsyncTask;
@@ -16,6 +17,7 @@ import android.view.animation.AnimationSet;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.example.loren.altklausurenneu.Utils.GalleryRow;
 import com.google.firebase.auth.FirebaseAuth;
@@ -35,12 +37,26 @@ import butterknife.OnClick;
 
 import id.zelory.compressor.Compressor;
 import io.fotoapparat.Fotoapparat;
+import io.fotoapparat.configuration.UpdateConfiguration;
+import io.fotoapparat.error.CameraErrorListener;
+import io.fotoapparat.exception.camera.CameraException;
+import io.fotoapparat.parameter.ScaleType;
 import io.fotoapparat.result.BitmapPhoto;
 import io.fotoapparat.result.PhotoResult;
+import io.fotoapparat.selector.FlashSelectorsKt;
+import io.fotoapparat.selector.FocusModeSelectorsKt;
+import io.fotoapparat.selector.SelectorsKt;
 import io.fotoapparat.view.CameraView;
+import io.fotoapparat.parameter.Resolution;
+import io.fotoapparat.view.FocusView;
 import io.reactivex.Scheduler;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function1;
+
+import static io.fotoapparat.result.transformer.ResolutionTransformersKt.scaled;
+import static io.fotoapparat.selector.FlashSelectorsKt.autoFlash;
+import static io.fotoapparat.selector.FlashSelectorsKt.torch;
+import static io.fotoapparat.selector.LensPositionSelectorsKt.back;
 
 public class CameraViewer extends AppCompatActivity {
 
@@ -55,18 +71,31 @@ public class CameraViewer extends AppCompatActivity {
     @BindView(R.id.textnumberofPhotos)
     Button mNumberofPhotos;
 
+    @BindView(R.id.focusView)
+    FocusView focusView;
+
     @BindView(R.id.blinkwhite)
     ImageView fotoAnimation;
+
+    @BindView(R.id.flash)
+    ImageView flashImage;
+
     private ArrayList<String> thumbnailpath;
     private File originalimage;
     private String filepath;
+    private boolean flash_auto;
+    private boolean flash_off;
+    private boolean flash_on;
+    private int counterflash = 0;
+    private Flash flash;
+
 
     @OnClick(R.id.textnumberofPhotos)
     public void onClick() {
 
         passFilePath();
-        Log.d(TAG, "Number of Filepath: " +filepaths.size());
-        Log.d(TAG, "Number of Thumpaths: " +thumbnailpath.size());
+        Log.d(TAG, "Number of Filepath: " + filepaths.size());
+        Log.d(TAG, "Number of Thumpaths: " + thumbnailpath.size());
     }
 
     @BindView(R.id.camera_view)
@@ -89,12 +118,15 @@ public class CameraViewer extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         mfotoapparat.start();
+
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         mfotoapparat.stop();
+        flash.saveState();
+
     }
 
 
@@ -110,58 +142,60 @@ public class CameraViewer extends AppCompatActivity {
         filepaths = new ArrayList<>();
         thumbnailpath = new ArrayList<>();
 
+
         relativeLayout = (RelativeLayout) findViewById(R.id.layout_photoviewer);
 
 
         ButterKnife.bind(this);
         galleryRow = new GalleryRow(relativeLayout, getApplicationContext());
 
+
         Bundle bundle = getIntent().getExtras();
-        if(bundle!=null){
+        if (bundle != null) {
             //bundle with information from Gallery View -> so the right number of thumbs is displayed
             thumbnailpath = bundle.getStringArrayList(INTENT_THUMBNAILS_PATH);
             filepaths = bundle.getStringArrayList(INTENT_PHOTOS_PATH);
-            galleryRow.updateImages(thumbnailpath,0);
+            galleryRow.updateImages(thumbnailpath, 0);
             mNumberofPhotos.bringToFront();
             counter = thumbnailpath.size();
             mNumberofPhotos.setVisibility(View.VISIBLE);
             mNumberofPhotos.setText("    " + counter);
-            Log.d(TAG,"Bundle send");
+            Log.d(TAG, "Bundle send");
         }
 
         mFullscreenImage.setVisibility(View.INVISIBLE);
         //show button only if first photo is taken
-        if(counter==0){
+        if (counter == 0) {
             mNumberofPhotos.setVisibility(View.INVISIBLE);
-            Log.d(TAG,"Circle Invisble cause coúnter =0");
+            Log.d(TAG, "Circle Invisble cause coúnter =0");
         }
 
         fotoAnimation.setVisibility(View.INVISIBLE);
 
         newFotoapparat();
 
+        //initializes current flash state -> stored in Shared Preferences
+
+        flash = new Flash(mfotoapparat, flashImage, getApplicationContext(),Flash.FLASH_OFF);
+
+
         TakeFoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 PhotoResult photoResult = mfotoapparat.takePicture();
+
                 //counter for amount of photos
                 counter++;
 
                 //save fotos to file, if they should be uploaded later
                 filepath = getApplicationContext().getExternalFilesDir("images/temp").toString();
 
-                filepath += "/"+ Long.toString(System.currentTimeMillis()) + ".jpeg";
+                filepath += "/" + Long.toString(System.currentTimeMillis()) + ".jpeg";
                 originalimage = new File(filepath);
                 photoResult.saveToFile(originalimage);
 
 
-
-
-
-
-
-
-                Log.d(TAG,"Saved to path:" +filepath);
+                Log.d(TAG, "Saved to path:" + filepath);
 
                 //collect all filepath in an array
                 filepaths.add(filepath);
@@ -169,7 +203,7 @@ public class CameraViewer extends AppCompatActivity {
                 AnimateFoto();
 
 
-                photoResult.toBitmap()
+                photoResult.toBitmap(scaled(0.15f))
                         .whenAvailable(new Function1<BitmapPhoto, Unit>() {
                             @Override
                             public Unit invoke(BitmapPhoto bitmapPhoto) {
@@ -177,10 +211,16 @@ public class CameraViewer extends AppCompatActivity {
                                 Log.d(TAG, "Byte count:" + bitmapPhoto.bitmap.getByteCount());
 
 
-                                BackgroundImageResize imageResize = new BackgroundImageResize();
-                                imageResize.setRotation(-bitmapPhoto.rotationDegrees);
+                                if (galleryRow != null) {
+                                    Log.d(TAG, "Foto geklickt, Counter: " + counter);
+                                    galleryRow.addImage(bitmapPhoto.bitmap, -bitmapPhoto.rotationDegrees);
+                                }
 
-                                imageResize.execute(bitmapPhoto.bitmap);
+                                mNumberofPhotos.bringToFront();
+                                mNumberofPhotos.setVisibility(View.VISIBLE);
+                                mNumberofPhotos.setText("    " + counter);
+
+                                cacheBitmaps(bitmapPhoto.bitmap);
 
 
                                 return null;
@@ -199,22 +239,46 @@ public class CameraViewer extends AppCompatActivity {
         for (int i = 0; i < filepaths.size(); i++) {
             File file = new File(filepaths.get(i));
             Boolean deleted = file.delete();
-            Log.d(TAG, "File deleted: " +deleted + file.getAbsoluteFile());
+            Log.d(TAG, "File deleted: " + deleted + file.getAbsoluteFile());
 
         }
         filepaths.clear();
         thumbnailpath.clear();
         mfotoapparat.stop();
-        Intent intent = new Intent(CameraViewer.this,MainActivity.class);
+        Intent intent = new Intent(CameraViewer.this, MainActivity.class);
 
         startActivity(intent);
+    }
+
+    @OnClick(R.id.flash)
+    public void changeFlashMode() {
+        //new flashmode on every click
+        flash.setNextModus();
+        Log.d(TAG, "Aktueller Counter: " + counterflash);
+
     }
 
     private void passFilePath() {
         Intent intent = new Intent(CameraViewer.this, GalleryView.class);
         intent.putExtra("Filepath", filepaths);
-        intent.putExtra("Thumbpath",thumbnailpath);
+        intent.putExtra("Thumbpath", thumbnailpath);
         startActivity(intent);
+    }
+
+
+
+    private void saveFlashState(int modus) {
+        SharedPreferences sharedPreferences = getSharedPreferences("Flash", MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt("Mode", modus);
+        Log.d(TAG, "Written to shared: " + modus);
+        editor.commit();
+    }
+
+    private int getFlashState() {
+        SharedPreferences sharedPreferences = getSharedPreferences("Flash", MODE_PRIVATE);
+        Log.d(TAG, "Written from Shared: " + sharedPreferences.getInt("Mode", 0));
+        return sharedPreferences.getInt("Mode", 0);
     }
 
     private void AnimateFoto() {
@@ -238,12 +302,58 @@ public class CameraViewer extends AppCompatActivity {
         mfotoapparat = Fotoapparat
                 .with(getApplicationContext())
                 .into(cameraView)
+                .focusView(focusView)
+                .previewScaleType(ScaleType.CenterCrop)
+                .flash(counterflash == 0 ? FlashSelectorsKt.autoFlash() : FlashSelectorsKt.torch())
+                .lensPosition(back())
+                .cameraErrorCallback(new CameraErrorListener() {
+                    @Override
+                    public void onError(CameraException e) {
+                        Toast.makeText(CameraViewer.this, e.toString(), Toast.LENGTH_LONG).show();
+                    }
+                })
 
                 .build();
 
         return mfotoapparat;
     }
 
+    private void cacheBitmaps(Bitmap bitmap) {
+
+        File f3 = new File(getApplicationContext().getExternalFilesDir("images/temp/bitmap").toString());
+        if (!f3.exists()) {
+            f3.mkdirs();
+        }
+        OutputStream outputStream = null;
+        File file = new File(getApplicationContext().getExternalFilesDir("images/temp/bitmap") + Long.toString(System.currentTimeMillis()) + ".png");
+
+        try {
+            outputStream = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
+
+            Log.d(TAG, "File written to storage: " + file.getAbsolutePath());
+        } catch (Exception e) {
+            Log.d(TAG, "File not found");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (outputStream != null) {
+                    outputStream.close();
+
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+        }
+        //add path to array for later delete
+        thumbnailpath.add(file.getAbsolutePath());
+
+
+    }
+
+    //todo maybe delete class
     public class BackgroundImageResize extends AsyncTask<Bitmap, Void, Bitmap> {
         int imagerotation;
 
@@ -273,15 +383,12 @@ public class CameraViewer extends AppCompatActivity {
             cacheBitmaps(thumb);
 
 
-
             return thumb;
         }
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
             super.onPostExecute(bitmap);
-
-
 
 
             if (galleryRow != null) {
@@ -295,47 +402,7 @@ public class CameraViewer extends AppCompatActivity {
 
         }
 
-        /**
-         * Writes Bitmap to file png and stores path in array
-         * @param bitmap
-         */
-        private void cacheBitmaps(Bitmap bitmap) {
-
-            File f3 = new File(getApplicationContext().getExternalFilesDir("images/temp/bitmap").toString());
-            if(!f3.exists()){
-                f3.mkdirs();
-            }
-            OutputStream outputStream = null;
-            File file = new File(getApplicationContext().getExternalFilesDir("images/temp/bitmap")  + Long.toString(System.currentTimeMillis())+".png");
-
-            try {
-                outputStream = new FileOutputStream(file);
-                bitmap.compress(Bitmap.CompressFormat.PNG,100,outputStream);
-
-                Log.d(TAG, "File written to storage: " + file.getAbsolutePath());
-            } catch (Exception e) {
-                Log.d(TAG, "File not found");
-                e.printStackTrace();
-            }finally {
-                try{
-                    if(outputStream!=null){
-                        outputStream.close();
-
-                    }
-                }catch (IOException e){
-                    e.printStackTrace();
-                }
-
-
-            }
-            //add path to array for later delete
-            thumbnailpath.add(file.getAbsolutePath());
-
-
-        }
-
 
     }
-
 
 }
