@@ -2,6 +2,7 @@ package com.example.loren.altklausurenneu;
 
 import android.app.Activity;
 
+import android.app.ExpandableListActivity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -23,6 +24,8 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
+import android.widget.ExpandableListView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -43,6 +46,8 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
@@ -74,8 +79,19 @@ public class MainActivity extends AppCompatActivity
     private DatabaseReference mDatabase;
     private static FirebaseDatabase database;
     ExamListAdapter arrayAdapter;
+    NavigationDrawerListAdapter navigationDrawerListAdapter;
     private ArrayList<Exam> exams;
     private FirebaseMethods firebaseMethods;
+
+    //Expandable List in Navigation Drawer
+    private ExpandableListAdapter expandableListAdapter;
+    ExpandableListView expandableListView;
+    List<String> listDataHeader;
+    HashMap<String,List<String>> listDataChild;
+
+    //Array List for Navigation Drawer
+    String[] navdrawerheader;
+    ListView navList;
 
     Context context;
     private int counter = 0;
@@ -137,6 +153,24 @@ public class MainActivity extends AppCompatActivity
 
         //Views
         fabSpeedDial = (FabSpeedDial) findViewById(R.id.fabidnew);
+        expandableListView = (ExpandableListView)findViewById(R.id.expandListNav);
+        //preparing list Data
+        prepareList();
+        //set Adapter for expandable List
+        expandableListAdapter = new ExpandableListAdapter(this,listDataHeader,listDataChild);
+        expandableListView.setAdapter(expandableListAdapter);
+
+        //Adapter for List in Navigation Drawer
+        navdrawerheader = new String[3];
+        navdrawerheader[0] = "Meine Protokolle";
+        navdrawerheader[1] = "Kalender";
+        navdrawerheader[2] = "Einstellungen";
+        navList = (ListView)findViewById(R.id.list_nav);
+
+
+        navigationDrawerListAdapter = new NavigationDrawerListAdapter(MainActivity.this,navdrawerheader);
+        navList.setAdapter(navigationDrawerListAdapter);
+
 
         //Listener for clicks of FAB
         fabSpeedDial.setMenuListener(new FabSpeedDial.MenuListener() {
@@ -186,6 +220,28 @@ public class MainActivity extends AppCompatActivity
 
         mDatabase.addValueEventListener(getDataValueEvent());
 
+        expandableListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+            @Override
+            public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
+
+
+
+
+
+               if(expandableListView.isGroupExpanded(groupPosition)){
+                   expandableListView.collapseGroup(groupPosition);
+
+               }else{
+                   expandableListView.expandGroup(groupPosition);
+
+               }
+
+
+
+               return true;
+            }
+        });
+
 
         //Listview handle clicks
         listViewExam.setOnItemClickListener(
@@ -206,6 +262,23 @@ public class MainActivity extends AppCompatActivity
                 });
 
 
+    }
+
+    private void prepareList() {
+
+        listDataHeader = new ArrayList<>();
+        listDataChild = new HashMap<String,List<String>>();
+
+        //adding header data
+        listDataHeader.add("Modul auswählen");
+
+        //Adding child Data
+        List<String> module = new ArrayList<>();
+        module.add("IT Management");
+        module.add("Statistik");
+        module.add("Entrepreneurship");
+
+        listDataChild.put(listDataHeader.get(0),module);
     }
 
 
@@ -238,6 +311,8 @@ public class MainActivity extends AppCompatActivity
                 // Array Adapter for Custom ListView
                 arrayAdapter = new ExamListAdapter(MainActivity.this, exams);
                 listViewExam.setAdapter(arrayAdapter);
+
+
 
             }
 

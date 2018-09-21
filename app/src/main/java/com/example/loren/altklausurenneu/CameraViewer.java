@@ -118,6 +118,9 @@ public class CameraViewer extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         mfotoapparat.start();
+        //get state which flash was selected
+        flash.getState();
+        flash.updateConfiguration();
 
     }
 
@@ -176,7 +179,7 @@ public class CameraViewer extends AppCompatActivity {
 
         //initializes current flash state -> stored in Shared Preferences
 
-        flash = new Flash(mfotoapparat, flashImage, getApplicationContext(),Flash.FLASH_OFF);
+        flash = new Flash(mfotoapparat, flashImage, getApplicationContext(), Flash.FLASH_OFF);
 
 
         TakeFoto.setOnClickListener(new View.OnClickListener() {
@@ -254,6 +257,7 @@ public class CameraViewer extends AppCompatActivity {
     public void changeFlashMode() {
         //new flashmode on every click
         flash.setNextModus();
+        flash.updateConfiguration();
         Log.d(TAG, "Aktueller Counter: " + counterflash);
 
     }
@@ -265,21 +269,6 @@ public class CameraViewer extends AppCompatActivity {
         startActivity(intent);
     }
 
-
-
-    private void saveFlashState(int modus) {
-        SharedPreferences sharedPreferences = getSharedPreferences("Flash", MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putInt("Mode", modus);
-        Log.d(TAG, "Written to shared: " + modus);
-        editor.commit();
-    }
-
-    private int getFlashState() {
-        SharedPreferences sharedPreferences = getSharedPreferences("Flash", MODE_PRIVATE);
-        Log.d(TAG, "Written from Shared: " + sharedPreferences.getInt("Mode", 0));
-        return sharedPreferences.getInt("Mode", 0);
-    }
 
     private void AnimateFoto() {
 

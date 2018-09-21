@@ -19,8 +19,10 @@ public class Flash {
     private String TAG = "FLASH";
 
 
-    @StringDef({FLASH_OFF,FLASH_ON,FLASH_AUTO})
-    public @interface FlashMode{}
+    @StringDef({FLASH_OFF, FLASH_ON, FLASH_AUTO})
+    public @interface FlashMode {
+    }
+
     public static final String FLASH_OFF = "off";
     public static final String FLASH_ON = "on";
     public static final String FLASH_AUTO = "auto";
@@ -32,10 +34,10 @@ public class Flash {
     private String defaultmode;
 
 
-    public Flash(Fotoapparat fotoapparat, ImageView imageView, Context context,@FlashMode String Defaultmode) {
+    public Flash(Fotoapparat fotoapparat, ImageView imageView, Context context, @FlashMode String Defaultmode) {
         this.fotoapparat = fotoapparat;
         this.imageView = imageView;
-        this.context  = context;
+        this.context = context;
         setModus(Defaultmode);
     }
 
@@ -43,26 +45,28 @@ public class Flash {
         return modus;
     }
 
-    /**Set the modus of the flash
+    /**
+     * Set the modus of the flash
      *
      * @param modus off, auto, on
      */
     public void setModus(@FlashMode String modus) {
         this.modus = modus;
-        if(getModus().equals("off")){
+        if (getModus().equals("off")) {
             this.imageView.setImageResource(R.drawable.ic_flash_off);
-            Log.d(TAG,"OOOOFF");
+            Log.d(TAG, "OOOOFF");
         }
-        if(getModus().equals("on")){
+        if (getModus().equals("on")) {
             this.imageView.setImageResource(R.drawable.ic_flash_on_indicator);
         }
-        if(getModus().equals("auto")){
+        if (getModus().equals("auto")) {
             this.imageView.setImageResource(R.drawable.ic_automatic_flash_symbol);
         }
+
     }
 
     /**
-     * Set modus first!!
+     * Set modus first!! -> Updates configuration of flash
      */
     public void updateConfiguration() {
 
@@ -74,34 +78,40 @@ public class Flash {
                 .build());
 
 
-
     }
 
-    public void saveState(){
-        SharedPreferences sharedPreferences = context.getSharedPreferences("Flash",Context.MODE_PRIVATE);
+    /**
+     * Saves the current chosen flash in shared Preferences
+     */
+    public void saveState() {
+        SharedPreferences sharedPreferences = context.getSharedPreferences("Flash", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString("Modus",getModus());
+        editor.putString("Modus", getModus());
         editor.commit();
     }
 
-    public void getState(){
-        SharedPreferences sharedPreferences = context.getSharedPreferences("Flash",Context.MODE_PRIVATE);
-        String modus = sharedPreferences.getString("Modus",null);
-        if (modus!=null){
+    /**
+     * set the last flash mode
+     */
+    public void getState() {
+        SharedPreferences sharedPreferences = context.getSharedPreferences("Flash", Context.MODE_PRIVATE);
+        String modus = sharedPreferences.getString("Modus", null);
+        if (modus != null) {
             setModus(modus);
         }
     }
 
-    public void setNextModus(){
-        if(getModus().equals("auto")){
+    public void setNextModus() {
+
+        if (this.getModus().equals("auto")) {
             this.setModus(FLASH_OFF);
 
-            Log.d(TAG,"Equals Auto");
-        }else{
-            if(getModus().equals("off")){
+            Log.d(TAG, "Equals Auto");
+        } else {
+            if (getModus().equals("off")) {
                 this.setModus(FLASH_ON);
-            }else{
-                if(getModus().equals("on")){
+            } else {
+                if (getModus().equals("on")) {
                     this.setModus(FLASH_AUTO);
                 }
             }
