@@ -27,6 +27,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -38,7 +39,7 @@ import java.util.ArrayList;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
 import static android.app.Activity.RESULT_OK;
-import static com.example.loren.altklausurenneu.MainActivity.getDatabase;
+
 
 public class MainFragment extends android.app.Fragment implements FirebaseMethods.FireBaseMethodsInter{
 
@@ -75,6 +76,15 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
 
 
     private Uri fileData;
+    private String module;
+
+    public String getModule() {
+        return module;
+    }
+
+    public void setModule(String module) {
+        this.module = module;
+    }
 
     FirebaseMethods.FireBaseMethodsInter fireBaseMethodsInter;
     private Context context;
@@ -140,10 +150,7 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
 
             Log.d(TAG,"Current Uri: "+uri.toString());
 
-            //todo maybe uncomment!!
-              /*  setFileData(uri);
-                exam.setFilepath(".jpg");
-                showDialog();*/
+
 
         }
     }
@@ -155,12 +162,27 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
 
      View view = inflater.inflate(R.layout.fragment_main,container,false);
 
+
+
         context = getActivity();
 
         rootview = getActivity().findViewById(android.R.id.content);
         //Views
         fabSpeedDial = (FabSpeedDial) view.findViewById(R.id.fabidnew);
         init();
+
+        //get module from bundle, which is send from MainActivity
+        Bundle bundle = this.getArguments();
+        if(bundle!=null){
+            setModule(bundle.getString("Module"));
+        }
+
+        //set the action bar title with the current module
+        if(getModule()!=null){
+            ((MainActivity) getActivity()).setActionBarTitle(getModule());
+        }
+
+
 
 
         return view;
@@ -175,8 +197,11 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
         firebaseMethods = new FirebaseMethods(getActivity());
         fireBaseMethodsInter = this;
         firebaseMethods.setMethodsInter(fireBaseMethodsInter);
+        Query query = firebaseMethods.selectExamByChild("name",getModule());
+        query.addValueEventListener(getDataValueEvent());
 
-        mDatabase.addValueEventListener(getDataValueEvent());
+
+       // mDatabase.addValueEventListener(getDataValueEvent());
         //Listener for clicks of FAB
         fabSpeedDial.setMenuListener(new FabSpeedDial.MenuListener() {
             @Override
@@ -348,7 +373,7 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
     public void showDialog()    {
 
         if(exam.getFilepath().contains(".pdf")){
-            final NewExamDialog examDialog = DialogFactory.makePDFExamDialog(R.string.dialog_title,
+            final NewExamDialog examDialog = DialogFactory.makePDFExamDialog(getModule(),
                     R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
 
                         @Override
@@ -378,6 +403,7 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
                                         //set Filepath and Download URL if upload was successful, get from FireBaseMethods
                                         exam.setFilepath(filepath);
                                         exam.setDownloadurl(downloadurl);
+                                        exam.setName(getModule());
                                         Log.d(TAG, "Download url set: "+ exam.getDownloadurl());
 
                                         //if upload was successfull write new Databaseentry
@@ -402,7 +428,7 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
         }
         //todo dont need jpg anymore
         if(exam.getFilepath().contains(".jpg")){
-            final NewExamDialog examDialog = DialogFactory.makeJPEGExamDialog(R.string.dialog_title,
+            final NewExamDialog examDialog = DialogFactory.makeJPEGExamDialog(getModule(),
                     R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
 
                         @Override

@@ -19,6 +19,7 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
@@ -68,6 +69,10 @@ public class FirebaseMethods {
         this.methodsInter = methodsInter;
     }
 
+    public Query selectExamByChild(String childtype, String key) {
+        return databaseReference.orderByChild(childtype).equalTo(key);
+    }
+
 
     private static FirebaseDatabase getDatabase() {
         if (database == null) {
@@ -87,10 +92,6 @@ public class FirebaseMethods {
      * @param exam Exam to be uploaded
      */
     public void uploadNewExam(Exam exam) {
-
-
-        //todo get real name
-        exam.setName("Mathe 12");
 
 
         Map<String, String> examneu = new HashMap<>();
@@ -143,7 +144,7 @@ public class FirebaseMethods {
                 Log.d(TAG, "Upload über neuen Task erfolgreich:  " + sRef.getName());
                 if (methodsInter != null) {
                     //if upload of file was successful, pass the name of the uploaded file to Interface
-                    methodsInter.onUploadSuccess(sRef.getName(),"moind");
+                    methodsInter.onUploadSuccess(sRef.getName(), "moind");
                 }
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -152,7 +153,7 @@ public class FirebaseMethods {
                 Log.d(TAG, "Upload war nicht erfolgreich");
                 if (methodsInter != null) {
                     //if upload of file was successful, pass the name of the uploaded file to Interface
-                    methodsInter.onUploadSuccess("Fail","Fail");
+                    methodsInter.onUploadSuccess("Fail", "Fail");
 
                 }
             }
@@ -168,8 +169,8 @@ public class FirebaseMethods {
     }
 
 //todo better method here -> type is unnecessary
+
     /**
-     *
      * @param data Uri to be uploaded
      * @param type .pdf for PDF
      */
@@ -197,7 +198,7 @@ public class FirebaseMethods {
         Task<Uri> urlTask = uploadTask.continueWithTask(new Continuation<UploadTask.TaskSnapshot, Task<Uri>>() {
             @Override
             public Task<Uri> then(@NonNull Task<UploadTask.TaskSnapshot> task) throws Exception {
-                if(!task.isSuccessful()){
+                if (!task.isSuccessful()) {
                     throw task.getException();
                 }
                 //continue with task to get download url
@@ -206,17 +207,17 @@ public class FirebaseMethods {
         }).addOnCompleteListener(new OnCompleteListener<Uri>() {
             @Override
             public void onComplete(@NonNull Task<Uri> task) {
-                if(task.isSuccessful()){
+                if (task.isSuccessful()) {
                     Uri uridownload = task.getResult();
                     Log.d(TAG, "Upload über neuen Task erfolgreich:  " + sRef.getName());
                     if (methodsInter != null) {
 
                         //if upload of file was successful, pass the name of the uploaded file to Interface
-                        methodsInter.onUploadSuccess(sRef.getName(),uridownload.toString());
+                        methodsInter.onUploadSuccess(sRef.getName(), uridownload.toString());
                     }
-                    Log.d(TAG,"Neue URL: "+uridownload.toString());
-                }else{
-                    Log.d(TAG,"Couldnt get download url");
+                    Log.d(TAG, "Neue URL: " + uridownload.toString());
+                } else {
+                    Log.d(TAG, "Couldnt get download url");
                 }
             }
         });
@@ -334,6 +335,7 @@ public class FirebaseMethods {
 
     public interface FireBaseMethodsInter {
         void onUploadSuccess(String filepath, String downloadurl);
+
         //todo do we still need onDownloadSuccess? maybe new interface
         void onDownloadSuccess(Boolean downloaded);
     }

@@ -31,10 +31,12 @@ import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 
 import com.example.loren.altklausurenneu.Utils.SampleCamera;
+import com.example.loren.altklausurenneu.Utils.Utils;
 import com.google.firebase.auth.FirebaseAuth;
 
 import com.google.firebase.database.DataSnapshot;
@@ -56,7 +58,7 @@ import butterknife.OnClick;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, FirebaseMethods.FireBaseMethodsInter {
+        implements NavigationView.OnNavigationItemSelectedListener {
 
 
 //todo clear this interface chaos
@@ -64,34 +66,20 @@ public class MainActivity extends AppCompatActivity
 
     ListView listViewExam;
     FabSpeedDial fabSpeedDial;
+    FirebaseAuth mAuth;
 
     private static final String TAG = "MainActivity";
-    private static final String DATABASE_CATEGORY = "category";
-    private static final String DATABASE_SEMESTER = "semester";
-    private static final String DATABASE_NAME = "name";
-    private static final String DOWNLOAD_URL_BUNDLE = "downloadurl";
-    static final int REQUEST_TAKE_PHOTO = 1;
-    static final int REQUEST_TAKE_PHOTO_PIX = 2;
-    private static final String BUNDLE_DOWNLOAD_URL = "url";
 
-    //code for ReadFile
-    private static final int READ_REQUEST_CODE = 42;
-    private FirebaseAuth mAuth;
-    private FirebaseStorage firebaseStorage;
-    private StorageReference storageRef;
-    private UploadTask uploadTask;
-    private DatabaseReference mDatabase;
-    private static FirebaseDatabase database;
-    ExamListAdapter arrayAdapter;
+
     NavigationDrawerListAdapter navigationDrawerListAdapter;
-    private ArrayList<Exam> exams;
+
     private FirebaseMethods firebaseMethods;
 
     //Expandable List in Navigation Drawer
     private ExpandableListAdapter expandableListAdapter;
     ExpandableListView expandableListView;
     List<String> listDataHeader;
-    HashMap<String,List<String>> listDataChild;
+    HashMap<String, List<String>> listDataChild;
 
     //Array List for Navigation Drawer
     String[] navdrawerheader;
@@ -99,29 +87,7 @@ public class MainActivity extends AppCompatActivity
 
     Context context;
     private int counter = 0;
-
-    @Override
-    public void startActivityForResult(Intent intent, int requestCode) {
-        super.startActivityForResult(intent, requestCode);
-    }
-
-    private Exam exam;
-    private Snackbar snackbar;
-    private View rootview;
-
-
-    private Uri fileData;
-    private String mCurrentPhotoPath;
-
-
-
-
-
-    //checks if File is downloaded
-    private Boolean downloaded;
-
-    FirebaseMethods.FireBaseMethodsInter fireBaseMethodsInter;
-
+    private DrawerLayout drawer;
 
 
     @Override
@@ -131,17 +97,17 @@ public class MainActivity extends AppCompatActivity
 
         context = getApplicationContext();
 
-        rootview = findViewById(android.R.id.content);
 
         init();
+
+
 
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-
+        drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
 
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -157,11 +123,11 @@ public class MainActivity extends AppCompatActivity
 
         //Views
         fabSpeedDial = (FabSpeedDial) findViewById(R.id.fabidnew);
-        expandableListView = (ExpandableListView)findViewById(R.id.expandListNav);
+        expandableListView = (ExpandableListView) findViewById(R.id.expandListNav);
         //preparing list Data
         prepareList();
         //set Adapter for expandable List
-        expandableListAdapter = new ExpandableListAdapter(this,listDataHeader,listDataChild);
+        expandableListAdapter = new ExpandableListAdapter(this, listDataHeader, listDataChild);
         expandableListView.setAdapter(expandableListAdapter);
 
         //Adapter for List in Navigation Drawer
@@ -169,93 +135,74 @@ public class MainActivity extends AppCompatActivity
         navdrawerheader[0] = "Meine Protokolle";
         navdrawerheader[1] = "Kalender";
         navdrawerheader[2] = "Einstellungen";
-        navList = (ListView)findViewById(R.id.list_nav);
+        navList = (ListView) findViewById(R.id.list_nav);
 
 
-        navigationDrawerListAdapter = new NavigationDrawerListAdapter(MainActivity.this,navdrawerheader);
+        navigationDrawerListAdapter = new NavigationDrawerListAdapter(MainActivity.this, navdrawerheader);
         navList.setAdapter(navigationDrawerListAdapter);
 
-
-        //Listener for clicks of FAB
-        fabSpeedDial.setMenuListener(new FabSpeedDial.MenuListener() {
+        //handle click ofs expandable List with modules
+        expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
-            public boolean onPrepareMenu(NavigationMenu navigationMenu) {
+            public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+                TextView textView = v.findViewById(R.id.lblListItem);
+                //get the name of the selected Module
+                String module = (String) textView.getText();
+                openMainFragement(module);
+
+
+                drawer.closeDrawer(GravityCompat.START);
                 return true;
-            }
-
-            @Override
-            //handle clicks on miniFab here
-            public boolean onMenuItemSelected(MenuItem menuItem) {
-                //Action here
-                switch (menuItem.getItemId()) {
-                    //upload file from phone
-                    case R.id.menu_upload:
-
-                        FileSearch();
-                        break;
-
-                    //take photo
-                    case R.id.menu_uploadtip:
-                       Intent intent = new Intent(MainActivity.this,CameraViewer.class);
-
-                       startActivity(intent);
-                       // TakePictureIntent();
-
-                        break;
-                }
-
-                return true;
-            }
-
-            @Override
-            public void onMenuClosed() {
 
             }
         });
 
 
-        listViewExam = (ListView) findViewById(R.id.list_exams);
-
-        //declare firebase method, set interface
-        firebaseMethods = new FirebaseMethods(getApplicationContext());
-        fireBaseMethodsInter = this;
-        firebaseMethods.setMethodsInter(fireBaseMethodsInter);
-
-
-        mDatabase.addValueEventListener(getDataValueEvent());
-
         //handle clicks of custom navigation Drawer Menu
         navList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-           android.app.Fragment fragment;
+            android.app.Fragment fragment;
+
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(getApplicationContext(),"Hallo",Toast.LENGTH_SHORT).show();
-                fragment = new MainFragment();
 
-                if(fragment!=null){
-                    android.app.FragmentManager fragmentManager = getFragmentManager();
-                    android.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                    fragmentTransaction.replace(R.id.fragment_container,fragment);
-                    fragmentTransaction.commit();
+                android.app.FragmentManager fragmentManager = getFragmentManager();
+                android.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+
+                switch (position) {
+                    case 0:
+
+                        fragment = new MainFragment();
+                        if (fragment != null) {
+                            fragmentTransaction.replace(R.id.fragment_container, fragment);
+                            fragmentTransaction.commit();
+
+                        }
+
+
+                        break;
+                    case 2:
+                        Toast.makeText(getApplicationContext(), "Position: " + position, Toast.LENGTH_SHORT).show();
+
+
                 }
 
-                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+
                 drawer.closeDrawer(GravityCompat.START);
             }
         });
 
 
-
-
-
-
     }
 
+    /**
+     * Prepares List for custom Navigation Menu
+     */
     private void prepareList() {
 
         listDataHeader = new ArrayList<>();
-        listDataChild = new HashMap<String,List<String>>();
+        listDataChild = new HashMap<String, List<String>>();
 
         //adding header data
         listDataHeader.add("Modul auswählen");
@@ -263,75 +210,26 @@ public class MainActivity extends AppCompatActivity
         //Adding child Data
         List<String> module = new ArrayList<>();
         module.add("Mobile Systeme");
-        module.add("Statistik");
+        module.add("Mathe 12");
         module.add("Entrepreneurship");
         module.add("ERP-Systeme");
         module.add("Betriebssysteme");
 
-        listDataChild.put(listDataHeader.get(0),module);
+        listDataChild.put(listDataHeader.get(0), module);
     }
 
+    private void openMainFragement(String module){
+        android.app.FragmentManager fragmentManager = getFragmentManager();
+        android.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-    /**
-     * Gets all Exams and set them to ListView with adapter
-     *
-     * @return
-     */
-    private ValueEventListener getDataValueEvent() {
-        //listen for changes of data and update UI
-        ValueEventListener valueEventListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+       android.app.Fragment fragment = new MainFragment();
+       Bundle bundle = new Bundle();
+       bundle.putString("Module",module);
+       fragment.setArguments(bundle);
 
-                // ArrayList to keep Exams
-                exams = new ArrayList<Exam>();
-                if (dataSnapshot.exists()) {
-                    //get all Exams
-                    for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-                        Exam exam;
-                        exam = snapshot.getValue(Exam.class);
-                        Log.d(TAG, "User: " + exam.getDownloadurl());
+        fragmentTransaction.replace(R.id.fragment_container, fragment);
+        fragmentTransaction.commit();
 
-                        //add to list
-                        exams.add(exam);
-
-                    }
-                }
-
-                // Array Adapter for Custom ListView
-                arrayAdapter = new ExamListAdapter(MainActivity.this, exams);
-                listViewExam.setAdapter(arrayAdapter);
-
-
-
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                //getting exam failed -> log
-                Log.d(TAG, "loadExam failed", databaseError.toException());
-            }
-        };
-
-        return valueEventListener;
-
-    }
-
-    @Override
-    public void onUploadSuccess(String filepath,String download) {
-
-    }
-
-    @Override
-    public void onDownloadSuccess(Boolean downloaded) {
-        Log.d(TAG,"interface fired");
-        if(downloaded){
-            snackbar.dismiss();
-            Log.d(TAG,"File successfully downloaded");
-        }else{
-            Log.d(TAG,"File could not be downloaded.");
-            showSnackbar("Datei konnte nicht heruntergeladen werden.",rootview);
-        }
 
     }
 
@@ -417,192 +315,8 @@ public class MainActivity extends AppCompatActivity
         Snackbar.make(view.findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT).show();
     }
 
-
-    /**
-     * Opens the file explorer to choose the file to upload
-     */
-    private void FileSearch() {
-
-        //choose a file
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-
-        //Filter that only openable files are shown
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-
-        String[] mimeTypes = {"image/jpeg", "application/pdf"};
-
-        //sets the type first to all
-        intent.setType("*/*");
-
-        //todo new soltion here to support api <19
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-
-        startActivityForResult(intent, READ_REQUEST_CODE);
-
-
-    }
-
-
-    /**
-     * Result from FileSearch
-     *
-     * @param requestCode
-     * @param resultCode
-     * @param data
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-
-        //check if request code is correct
-        if (requestCode == READ_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
-            //return intent contains a URI
-            Uri uri = null;
-            if (data != null) {
-                uri = data.getData();
-
-                //get mime Type of selected file -> Jpeg or pdf
-                ContentResolver cR = this.getContentResolver();
-                MimeTypeMap mime = MimeTypeMap.getSingleton();
-                String type = mime.getExtensionFromMimeType(cR.getType(uri));
-                Log.d(TAG, "Mime Typ: " + type);
-
-                exam.setFilepath("." + type);
-                setFileData(uri);
-                showDialog();
-
-            } else {
-                Log.d(TAG, "File not found: ");
-            }
-        }
-        if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
-
-
-                Log.d(TAG,"Photo file:" +mCurrentPhotoPath);
-                File file = new File(mCurrentPhotoPath);
-                Uri uri = Uri.fromFile(file);
-
-            // new try :
-                Intent intent = new Intent(getApplicationContext(),CameraViewer.class);
-                intent.setData(uri);
-                startActivity(intent);
-
-
-
-                Log.d(TAG,"Current Uri: "+uri.toString());
-
-                //todo maybe uncomment!!
-              /*  setFileData(uri);
-                exam.setFilepath(".jpg");
-                showDialog();*/
-
-        }
-    }
-
-
-    public void showDialog()    {
-
-        if(exam.getFilepath().contains(".pdf")){
-            final NewExamDialog examDialog = DialogFactory.makePDFExamDialog(R.string.dialog_title,
-                    R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
-
-                        @Override
-                        public void onDialogClicked(String category, final String semester) {
-                            exam.setCategory(category);
-                            exam.setSemester(semester);
-
-
-
-                            Log.d(TAG, "Dialog wurde gezeigt.");
-
-
-                            //upload chosen file to storage
-                            firebaseMethods.uploadFileToStorageNEW(getFileData(),exam.getFilepath());
-
-                            showProgressSnackbar("Datei wird hochgeladen...");
-
-
-                            firebaseMethods.setMethodsInter(new FirebaseMethods.FireBaseMethodsInter() {
-                                @Override
-                                public void onUploadSuccess(String filepath, String downloadurl) {
-                                    if(filepath.equals("Fail")){
-                                        snackbar.dismiss();
-                                        showSnackbar("Upload fehlgeschlagen",rootview);
-                                    }else{
-                                        Log.d(TAG, "Upload erfolgreich");
-                                        //set Filepath and Download URL if upload was successful, get from FireBaseMethods
-                                        exam.setFilepath(filepath);
-                                        exam.setDownloadurl(downloadurl);
-                                        Log.d(TAG, "Download url set: "+ exam.getDownloadurl());
-
-                                        //if upload was successfull write new Databaseentry
-                                        firebaseMethods.uploadNewExam(exam);
-                                        snackbar.dismiss();
-                                    }
-
-                                }
-
-                                //todo delete and use other method
-                                @Override
-                                public void onDownloadSuccess(Boolean downloaded) {
-
-                                }
-                            });
-
-
-                        }
-                    });
-
-            examDialog.show(getFragmentManager(), NewExamDialog.TAG);
-        }
-        //todo dont need jpg anymore
-        if(exam.getFilepath().contains(".jpg")){
-            final NewExamDialog examDialog = DialogFactory.makeJPEGExamDialog(R.string.dialog_title,
-                    R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
-
-                        @Override
-                        public void onDialogClicked(String category, final String semester) {
-                            exam.setCategory(category);
-                            exam.setSemester(semester);
-
-
-                            Log.d(TAG, "Dialog wurde gezeigt.");
-
-
-                            //upload chosen file to storage
-                            firebaseMethods.uploadFileToStorageNEW(getFileData(), exam.getFilepath());
-
-                            showProgressSnackbar("Datei wird hochgeladen...");
-
-
-                            firebaseMethods.setMethodsInter(new FirebaseMethods.FireBaseMethodsInter() {
-                                @Override
-                                public void onUploadSuccess(String filepath,String download) {
-                                    //set Filepath and Download URL if upload was successful, get from FireBaseMethods
-                                    exam.setFilepath(filepath);
-                                    exam.setDownloadurl(download);
-                                    Log.d(TAG, "Download url set: "+ exam.getDownloadurl());
-
-                                    //if upload was successfull write new Databaseentry
-                                    firebaseMethods.uploadNewExam(exam);
-                                    snackbar.dismiss();
-                                }
-
-                                //todo delete and use other method
-                                @Override
-                                public void onDownloadSuccess(Boolean downloaded) {
-
-                                }
-                            });
-
-
-                        }
-                    });
-
-            examDialog.show(getFragmentManager(), NewExamDialog.TAG);
-        }
-
-
-
+    public void setActionBarTitle(String title) {
+        getSupportActionBar().setTitle(title);
     }
 
     /**
@@ -610,81 +324,12 @@ public class MainActivity extends AppCompatActivity
      */
     public void init() {
 
-        downloaded = false;
-
-        //delete all temp pictures if some are left
-        File dir = new File(getApplicationContext().getExternalFilesDir("images/temp").toString());
-        if(dir.isDirectory()){
-            String [] children = dir.list();
-            for(int i = 0;i< children.length;i++){
-                Boolean deleted = new File(dir,children[i]).delete();
-                Log.d(TAG,"Files on created deleted: "+deleted);
-            }
-        }
-
-
-        exam = new Exam();
-        getDatabase();
-
-        firebaseMethods = new FirebaseMethods(getApplicationContext());
-
-        //get current user
+        Utils.getDatabase();
         mAuth = FirebaseAuth.getInstance();
-        if (mAuth != null) {
-            String user = mAuth.getCurrentUser().getUid();
-            exam.setUserid(user);
-        }
 
-        //get CloudStorage
-        firebaseStorage = FirebaseStorage.getInstance();
-        // Create a storage reference from our app
-        storageRef = firebaseStorage.getReference();
-
-        mDatabase = FirebaseDatabase.getInstance().getReference("exams");
 
 
     }
-
-    /**
-     * shows Snackbar with progress turning circle
-     * @param text Message to be displayed in Snackbar
-     */
-    public void showProgressSnackbar(String text) {
-        snackbar = Snackbar.make(findViewById(android.R.id.content), text, Snackbar.LENGTH_INDEFINITE);
-        ViewGroup contentLay = (ViewGroup) snackbar.getView().findViewById(android.support.design.R.id.snackbar_text).getParent();
-        ProgressBar item = new ProgressBar(getApplicationContext());
-        contentLay.addView(item, 0);
-        snackbar.show();
-    }
-
-
-
-
-    public static FirebaseDatabase getDatabase() {
-        if (database == null) {
-            database = FirebaseDatabase.getInstance();
-            database.setPersistenceEnabled(true);
-            // ...
-        }
-
-        return database;
-
-    }
-
-
-    public void setFileData(Uri fileData) {
-        this.fileData = fileData;
-    }
-
-    public Uri getFileData() {
-        return this.fileData;
-    }
-
-
-
-
-
-
 
 
 }

@@ -226,7 +226,7 @@ public class GalleryView extends AppCompatActivity implements BaseSliderView.OnS
 
     public void showDialog() {
 
-        NewExamDialog examdialog = DialogFactory.makePDFExamDialog(R.string.dialog_title, R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
+        NewExamDialog examdialog = DialogFactory.makePDFExamDialog("Change Title!!", R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
             @Override
             public void onDialogClicked(String category, String semester) {
 

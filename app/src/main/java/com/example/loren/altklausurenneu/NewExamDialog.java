@@ -101,7 +101,7 @@ public class NewExamDialog extends DialogFragment {
 
         // get from bundle
 
-        int titleres = getArguments().getInt(ARG_TITLE);
+        String titleres = getArguments().getString(ARG_TITLE);
         int message = getArguments().getInt(ARG_MESSAGE);
         int buttontext = getArguments().getInt(ARG_BUTTON_TEXT);
         int image = getArguments().getInt(ARG_IMAGE_RESOURCE_ID);
@@ -148,7 +148,7 @@ public class NewExamDialog extends DialogFragment {
                 getActivity().findViewById(android.R.id.content).getWindowToken(), 0);
     }
 
-    public static NewExamDialog newInstance(@StringRes int title,  @StringRes int buttontext,
+    public static NewExamDialog newInstance(String title,  @StringRes int buttontext,
                                             @DrawableRes int imageResId, @ColorRes int color,
                                             @ArrayRes int categories, ButtonDialogAction buttonDialogAction){
 
@@ -159,7 +159,7 @@ public class NewExamDialog extends DialogFragment {
 
         //Supply the construction arguments for this fragment with a bundle
         Bundle args = new Bundle();
-        args.putInt(ARG_TITLE, title);
+        args.putString(ARG_TITLE, title);
         args.putInt(ARG_BUTTON_TEXT, buttontext);
         args.putInt(ARG_IMAGE_RESOURCE_ID, imageResId);
         args.putInt(ARG_COLOR_RESOURCE_ID, color);

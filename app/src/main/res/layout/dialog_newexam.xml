@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -13,7 +14,7 @@
     android:paddingRight="@dimen/spacing_large">
 
 
-<LinearLayout
+<android.support.constraint.ConstraintLayout
     android:layout_width="match_parent"
     android:layout_height="@dimen/dlg_one_button_icon_size"
     android:orientation="horizontal">
@@ -30,17 +31,21 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="@dimen/spacing_normal"
+        android:layout_marginBottom="8dp"
+
+        android:layout_marginTop="8dp"
         android:ellipsize="end"
         android:fontFamily="@string/font_fontFamily_medium"
-        android:gravity="center"
         android:maxLines="3"
         android:textSize="20sp"
+        app:layout_constraintBottom_toBottomOf="@+id/dlg_one_button_iv_icon"
+        app:layout_constraintStart_toEndOf="@+id/dlg_one_button_iv_icon"
+        app:layout_constraintTop_toTopOf="@+id/dlg_one_button_iv_icon"
         tools:text="Neue Klausur" />
 
 
 
-</LinearLayout>
+</android.support.constraint.ConstraintLayout>
 
 
 

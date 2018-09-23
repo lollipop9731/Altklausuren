@@ -10,7 +10,7 @@ public class DialogFactory {
     }
 
     //returns newExamDialog
-     static NewExamDialog  makePDFExamDialog(@StringRes int title,  @StringRes int buttontext, @ArrayRes int categories, NewExamDialog.ButtonDialogAction action){
+     static NewExamDialog  makePDFExamDialog(String title,  @StringRes int buttontext, @ArrayRes int categories, NewExamDialog.ButtonDialogAction action){
         return NewExamDialog.newInstance(title,
                 buttontext,
                 R.drawable.ic_pdf_neu,
@@ -21,7 +21,7 @@ public class DialogFactory {
 
      }
 
-     static NewExamDialog makeJPEGExamDialog(@StringRes int title,  @StringRes int buttontext, @ArrayRes int categories, NewExamDialog.ButtonDialogAction action){
+     static NewExamDialog makeJPEGExamDialog(String title,  @StringRes int buttontext, @ArrayRes int categories, NewExamDialog.ButtonDialogAction action){
          return NewExamDialog.newInstance(title,
                  buttontext,
                  R.drawable.ic_jpg,
