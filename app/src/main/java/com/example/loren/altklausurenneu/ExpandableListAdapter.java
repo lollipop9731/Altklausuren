@@ -2,6 +2,7 @@ package com.example.loren.altklausurenneu;
 
 import android.content.Context;
 import android.graphics.Typeface;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +14,8 @@ import com.itextpdf.text.pdf.ColumnText;
 
 import java.util.HashMap;
 import java.util.List;
+
+import static com.example.loren.altklausurenneu.NewExamDialog.TAG;
 
 public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
@@ -32,6 +35,7 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
+
         String headerTitle = (String) getGroup(groupPosition);
         if (convertView == null) {
             LayoutInflater infalInflater = (LayoutInflater) this.context
@@ -42,10 +46,17 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
         TextView lblListHeader = (TextView) convertView
                 .findViewById(R.id.lblListHeader);
 
+        final ImageView  arrowheader = (ImageView)convertView.findViewById(R.id.list_header_arrow);
+
+        arrowheader.animate().rotationBy(180).setDuration(100).start();
+
+
         lblListHeader.setText(headerTitle);
 
         return convertView;
     }
+
+
 
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {

@@ -11,6 +11,9 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -49,6 +52,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import butterknife.OnClick;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
 public class MainActivity extends AppCompatActivity
@@ -193,7 +197,7 @@ public class MainActivity extends AppCompatActivity
                     //take photo
                     case R.id.menu_uploadtip:
                        Intent intent = new Intent(MainActivity.this,CameraViewer.class);
-                       Toast.makeText(getApplicationContext(),"all",12);
+
                        startActivity(intent);
                        // TakePictureIntent();
 
@@ -220,46 +224,30 @@ public class MainActivity extends AppCompatActivity
 
         mDatabase.addValueEventListener(getDataValueEvent());
 
-        expandableListView.setOnGroupClickListener(new ExpandableListView.OnGroupClickListener() {
+        //handle clicks of custom navigation Drawer Menu
+        navList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+           android.app.Fragment fragment;
             @Override
-            public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Toast.makeText(getApplicationContext(),"Hallo",Toast.LENGTH_SHORT).show();
+                fragment = new MainFragment();
 
+                if(fragment!=null){
+                    android.app.FragmentManager fragmentManager = getFragmentManager();
+                    android.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.fragment_container,fragment);
+                    fragmentTransaction.commit();
+                }
 
-
-
-
-               if(expandableListView.isGroupExpanded(groupPosition)){
-                   expandableListView.collapseGroup(groupPosition);
-
-               }else{
-                   expandableListView.expandGroup(groupPosition);
-
-               }
-
-
-
-               return true;
+                DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+                drawer.closeDrawer(GravityCompat.START);
             }
         });
 
 
-        //Listview handle clicks
-        listViewExam.setOnItemClickListener(
-                new AdapterView.OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                        Exam current = exams.get(position);
-                        Intent intent = new Intent(MainActivity.this, PdfViewer.class);
-                        Log.d(TAG,"Current Download: "+ current.getDownloadurl());
-                        intent.putExtra(BUNDLE_DOWNLOAD_URL,current.getDownloadurl());
-                        //todo open intent with glide, if not pdf but jpg
-                        startActivity(intent);
 
 
-
-
-                    }
-                });
 
 
     }
@@ -274,9 +262,11 @@ public class MainActivity extends AppCompatActivity
 
         //Adding child Data
         List<String> module = new ArrayList<>();
-        module.add("IT Management");
+        module.add("Mobile Systeme");
         module.add("Statistik");
         module.add("Entrepreneurship");
+        module.add("ERP-Systeme");
+        module.add("Betriebssysteme");
 
         listDataChild.put(listDataHeader.get(0),module);
     }
@@ -666,6 +656,8 @@ public class MainActivity extends AppCompatActivity
         contentLay.addView(item, 0);
         snackbar.show();
     }
+
+
 
 
     public static FirebaseDatabase getDatabase() {
