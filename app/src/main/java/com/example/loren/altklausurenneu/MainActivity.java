@@ -1,19 +1,11 @@
 package com.example.loren.altklausurenneu;
 
-import android.app.Activity;
-
-import android.app.ExpandableListActivity;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -24,37 +16,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewGroup;
-import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ExpandableListView;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 
-import com.example.loren.altklausurenneu.Utils.SampleCamera;
 import com.example.loren.altklausurenneu.Utils.Utils;
 import com.google.firebase.auth.FirebaseAuth;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
-
-import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import butterknife.OnClick;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
 public class MainActivity extends AppCompatActivity
@@ -89,6 +65,19 @@ public class MainActivity extends AppCompatActivity
     private int counter = 0;
     private DrawerLayout drawer;
 
+    private int currentSelectedItem;
+
+
+    private static final String CURRENTSTATE = "current";
+    private static final String CURRENTSTATEKEY = "currentkey";
+
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        currentSelectedItem = savedInstanceState.getInt(CURRENTSTATEKEY);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,8 +88,6 @@ public class MainActivity extends AppCompatActivity
 
 
         init();
-
-
 
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -141,6 +128,31 @@ public class MainActivity extends AppCompatActivity
         navigationDrawerListAdapter = new NavigationDrawerListAdapter(MainActivity.this, navdrawerheader);
         navList.setAdapter(navigationDrawerListAdapter);
 
+        drawer.addDrawerListener(new DrawerLayout.DrawerListener() {
+            @Override
+            public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
+
+            }
+
+            @Override
+            public void onDrawerOpened(@NonNull View drawerView) {
+
+            }
+
+            @Override
+            public void onDrawerClosed(@NonNull View drawerView) {
+
+            }
+
+            @Override
+            public void onDrawerStateChanged(int newState) {
+                navigationDrawerListAdapter.setPosition(currentSelectedItem);
+                Log.d(TAG,"Selected Item: "+currentSelectedItem);
+               // navList.setBackgroundColor(getResources().getColor(R.color.grey));
+                navList.setAdapter(navigationDrawerListAdapter);
+            }
+        });
+
         //handle click ofs expandable List with modules
         expandableListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
             @Override
@@ -149,6 +161,9 @@ public class MainActivity extends AppCompatActivity
                 //get the name of the selected Module
                 String module = (String) textView.getText();
                 openMainFragement(module);
+                //save current site
+
+                currentSelectedItem = childPosition;
 
 
                 drawer.closeDrawer(GravityCompat.START);
@@ -188,6 +203,10 @@ public class MainActivity extends AppCompatActivity
 
                 }
 
+                //save the current site, set to 0 if item from list is selected not from expandable list
+                currentSelectedItem = position;
+
+
 
                 drawer.closeDrawer(GravityCompat.START);
             }
@@ -218,17 +237,42 @@ public class MainActivity extends AppCompatActivity
         listDataChild.put(listDataHeader.get(0), module);
     }
 
-    private void openMainFragement(String module){
+    private void openMainFragement(String module) {
         android.app.FragmentManager fragmentManager = getFragmentManager();
         android.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
 
-       android.app.Fragment fragment = new MainFragment();
-       Bundle bundle = new Bundle();
-       bundle.putString("Module",module);
-       fragment.setArguments(bundle);
+        android.app.Fragment fragment = new MainFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString("Module", module);
+        fragment.setArguments(bundle);
 
         fragmentTransaction.replace(R.id.fragment_container, fragment);
         fragmentTransaction.commit();
+
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putInt(CURRENTSTATEKEY, currentSelectedItem);
+
+
+    }
+
+    private void saveNavigationState() {
+        //get current selected module -> if not null
+        int current = 0;
+        SharedPreferences sharedPreferences = getSharedPreferences(CURRENTSTATE, MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        if (currentSelectedItem != 0) {
+            current = currentSelectedItem;
+        }
+
+        editor.putInt(CURRENTSTATEKEY, current);
+        Log.d(TAG, current + " was saved to shared.");
 
 
     }
@@ -326,7 +370,6 @@ public class MainActivity extends AppCompatActivity
 
         Utils.getDatabase();
         mAuth = FirebaseAuth.getInstance();
-
 
 
     }

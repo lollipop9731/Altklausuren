@@ -1,6 +1,7 @@
 package com.example.loren.altklausurenneu;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.provider.ContactsContract;
 import android.support.annotation.ArrayRes;
 import android.support.annotation.NonNull;
@@ -12,10 +13,27 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import static android.view.View.GONE;
+
 public class NavigationDrawerListAdapter extends ArrayAdapter<String> {
+
+   int color;
+   int position;
+   Context context;
+
+    public int getPosition() {
+        return position;
+    }
+
+    public void setPosition(int position) {
+        this.position = position;
+    }
+
+
 
     public NavigationDrawerListAdapter(@NonNull Context context, @NonNull String[] objects) {
         super(context, R.layout.nav_listview, objects);
+        this.context = context;
     }
 
     @NonNull
@@ -45,6 +63,11 @@ public class NavigationDrawerListAdapter extends ArrayAdapter<String> {
 
 
         textView.setText(header);
+        if(position==getPosition()){
+            textView.setTextColor(context.getResources().getColor(R.color.colorPrimary));
+            view.setBackgroundColor(context.getResources().getColor(R.color.grey));
+        }
+
 
         return view;
 
