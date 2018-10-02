@@ -65,12 +65,22 @@ public class FirebaseMethods {
     private StorageReference Reference;
     private DatabaseReference databaseReference = getDatabase().getReference("exams");
 
+    public void updateChild(String child,String newvalue){
+        databaseReference.child(child).setValue(newvalue);
+
+    }
+
     public void setMethodsInter(FireBaseMethodsInter methodsInter) {
         this.methodsInter = methodsInter;
+
     }
 
     public Query selectExamByChild(String childtype, String key) {
         return databaseReference.orderByChild(childtype).equalTo(key);
+    }
+
+    public Query selectAllExamsFromUser(String userID){
+        return databaseReference.orderByChild("user_id").equalTo(userID);
     }
 
 

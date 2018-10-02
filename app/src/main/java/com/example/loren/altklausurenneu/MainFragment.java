@@ -20,6 +20,7 @@ import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.example.loren.altklausurenneu.Utils.Utils;
 import com.google.firebase.auth.FirebaseAuth;
@@ -173,12 +174,16 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
 
         //get module from bundle, which is send from MainActivity
         Bundle bundle = this.getArguments();
-        if(bundle!=null){
+        if (bundle != null) {
+
             setModule(bundle.getString("Module"));
+
+
         }
 
         //set the action bar title with the current module
-        if(getModule()!=null){
+        if (getModule() != null) {
+
             ((MainActivity) getActivity()).setActionBarTitle(getModule());
         }
 
@@ -197,8 +202,15 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
         firebaseMethods = new FirebaseMethods(getActivity());
         fireBaseMethodsInter = this;
         firebaseMethods.setMethodsInter(fireBaseMethodsInter);
-        Query query = firebaseMethods.selectExamByChild("name",getModule());
-        query.addValueEventListener(getDataValueEvent());
+        if(getModule().equals(MainActivity.USERID)){
+            Query query = firebaseMethods.selectAllExamsFromUser(mAuth.getUid());
+            query.addValueEventListener(getDataValueEvent());
+        }else{
+            Query query = firebaseMethods.selectExamByChild("name",getModule());
+            query.addValueEventListener(getDataValueEvent());
+        }
+
+
 
 
        // mDatabase.addValueEventListener(getDataValueEvent());

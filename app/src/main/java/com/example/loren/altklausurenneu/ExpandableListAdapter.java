@@ -1,6 +1,7 @@
 package com.example.loren.altklausurenneu;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -20,6 +21,20 @@ import static com.example.loren.altklausurenneu.NewExamDialog.TAG;
 public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
     private Context context;
+    private int position = -99;
+
+    public int getPosition() {
+        return position;
+    }
+
+    /**
+     * This position will be highlighted
+     * @param position
+     */
+    public void setPosition(int position) {
+        this.position = position;
+    }
+
     private List<String> listDataHeader; //header titles
     //child data in format of: header title and childs
     private HashMap<String,List<String>>  listDataChild;
@@ -58,21 +73,33 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
 
 
+
+
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         final String childText = (String) getChild(groupPosition, childPosition);
 
-        if (convertView == null) {
+
+
+
             LayoutInflater infalInflater = (LayoutInflater) this.context
                     .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = infalInflater.inflate(R.layout.expand_list_child, null);
-        }
+
 
         TextView txtListChild = (TextView) convertView
                 .findViewById(R.id.lblListItem);
         imageView = (ImageView)convertView.findViewById(R.id.list_header_arrow);
 
         txtListChild.setText(childText);
+
+
+        if(childPosition==getPosition()){
+
+            txtListChild.setTextColor(context.getResources().getColor(R.color.colorPrimary));
+            txtListChild.setBackgroundColor(context.getResources().getColor(R.color.grey));
+        }
+
         return convertView;
     }
 
@@ -115,6 +142,8 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
     public boolean isChildSelectable(int groupPosition, int childPosition) {
         return true;
     }
+
+
 
 
 }

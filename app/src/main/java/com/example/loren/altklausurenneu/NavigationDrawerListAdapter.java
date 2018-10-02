@@ -25,6 +25,10 @@ public class NavigationDrawerListAdapter extends ArrayAdapter<String> {
         return position;
     }
 
+    /**
+     * Set position which one should be colored and highlighted
+     * @param position
+     */
     public void setPosition(int position) {
         this.position = position;
     }

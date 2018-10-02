@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
@@ -27,6 +28,10 @@ import com.example.loren.altklausurenneu.Utils.Utils;
 import com.google.firebase.auth.FirebaseAuth;
 
 
+import org.jetbrains.annotations.Contract;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,12 +40,24 @@ import io.github.yavski.fabspeeddial.FabSpeedDial;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+    private static final int NOTCHOOSEN = -99;
+    public static final String USERID = "Meine Protokolle";
+    private int selectedList;
+
+    //annotation to allow not every value for saving selected item
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({LIST_EXPANDABLE, LISTVIEW})
+    public @interface ListType {
+    }
+
+    public static final int LIST_EXPANDABLE = 0;
+    public static final int LISTVIEW = 1;
 
 
 //todo clear this interface chaos
     //todo delete all files on create -> thumbnails and full photos
 
-    ListView listViewExam;
+
     FabSpeedDial fabSpeedDial;
     FirebaseAuth mAuth;
 
@@ -65,18 +82,20 @@ public class MainActivity extends AppCompatActivity
     private int counter = 0;
     private DrawerLayout drawer;
 
-    private int currentSelectedItem;
+    private int currentSelectedItem = -99;
 
 
-    private static final String CURRENTSTATE = "current";
-    private static final String CURRENTSTATEKEY = "currentkey";
+    //constants for saving the selected state of navigation drawer
+    private static final String CURRENTITEM = "currentkey";
+    private static final String CURRENTLIST = "currentlist";
+    private boolean expandable;
 
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
-
-        currentSelectedItem = savedInstanceState.getInt(CURRENTSTATEKEY);
+        // get the current position of navigation drawer and if on expandable list or not
+        setSelectedItem(savedInstanceState.getInt(CURRENTLIST),savedInstanceState.getInt(CURRENTITEM));
     }
 
     @Override
@@ -84,10 +103,18 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        Log.d(TAG,"Selected ITEM: "+getSelectedItem());
+
+
         context = getApplicationContext();
+
+        //open Meine Protokolle on start
+        openMainFragement(USERID);
 
 
         init();
+
+
 
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -126,12 +153,25 @@ public class MainActivity extends AppCompatActivity
 
 
         navigationDrawerListAdapter = new NavigationDrawerListAdapter(MainActivity.this, navdrawerheader);
+        if(getSelectedList()==0){
+            navigationDrawerListAdapter.setPosition(NOTCHOOSEN);
+            expandableListAdapter.setPosition(getSelectedItem());
+        }
+        //custom Position on start
+        navigationDrawerListAdapter.setPosition(0);
+        setSelectedItem(LISTVIEW,0);
+
         navList.setAdapter(navigationDrawerListAdapter);
 
         drawer.addDrawerListener(new DrawerLayout.DrawerListener() {
             @Override
             public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
-
+                if(getSelectedList()==0){
+                    //expandable list was chosen -> must expand
+                    expandableListView.expandGroup(0);
+                }else{
+                    expandableListView.collapseGroup(0);
+                }
             }
 
             @Override
@@ -142,14 +182,27 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onDrawerClosed(@NonNull View drawerView) {
 
+                if (getSelectedList()==0) {
+                    //expandable list was chosen -> set false position
+                    navigationDrawerListAdapter.setPosition(NOTCHOOSEN);
+
+                    navList.setAdapter(navigationDrawerListAdapter);
+                    //set correct position to expandable list
+                    //expandable list selected
+                    expandableListAdapter.setPosition(currentSelectedItem);
+                    expandableListView.setAdapter(expandableListAdapter);
+                }else{
+                    //normal list view chosen
+                    navigationDrawerListAdapter.setPosition(getSelectedItem());
+                    navList.setAdapter(navigationDrawerListAdapter);
+                    expandableListAdapter.setPosition(NOTCHOOSEN);
+                }
             }
 
             @Override
             public void onDrawerStateChanged(int newState) {
-                navigationDrawerListAdapter.setPosition(currentSelectedItem);
-                Log.d(TAG,"Selected Item: "+currentSelectedItem);
-               // navList.setBackgroundColor(getResources().getColor(R.color.grey));
-                navList.setAdapter(navigationDrawerListAdapter);
+
+
             }
         });
 
@@ -161,9 +214,9 @@ public class MainActivity extends AppCompatActivity
                 //get the name of the selected Module
                 String module = (String) textView.getText();
                 openMainFragement(module);
-                //save current site
 
-                currentSelectedItem = childPosition;
+                //save current site -> save if at expandable list
+                setSelectedItem(LIST_EXPANDABLE, childPosition);
 
 
                 drawer.closeDrawer(GravityCompat.START);
@@ -188,24 +241,27 @@ public class MainActivity extends AppCompatActivity
                 switch (position) {
                     case 0:
 
-                        fragment = new MainFragment();
-                        if (fragment != null) {
-                            fragmentTransaction.replace(R.id.fragment_container, fragment);
-                            fragmentTransaction.commit();
 
-                        }
+                        openMainFragement(USERID);
+                        break;
 
+                    case 1:
+                        //my protocols pass userid -> so will be handled not as a modul in Main
+
+                        Toast.makeText(getApplicationContext(), "USeer: " + position, Toast.LENGTH_SHORT).show();
 
                         break;
+
                     case 2:
                         Toast.makeText(getApplicationContext(), "Position: " + position, Toast.LENGTH_SHORT).show();
+
+                        break;
 
 
                 }
 
                 //save the current site, set to 0 if item from list is selected not from expandable list
-                currentSelectedItem = position;
-
+                setSelectedItem(LISTVIEW, position);
 
 
                 drawer.closeDrawer(GravityCompat.START);
@@ -229,13 +285,33 @@ public class MainActivity extends AppCompatActivity
         //Adding child Data
         List<String> module = new ArrayList<>();
         module.add("Mobile Systeme");
-        module.add("Mathe 12");
+        module.add("WI-MAG I");
         module.add("Entrepreneurship");
         module.add("ERP-Systeme");
         module.add("Betriebssysteme");
 
         listDataChild.put(listDataHeader.get(0), module);
     }
+
+    private void setSelectedItem(@ListType int list, int position) {
+        this.selectedList = list;
+        this.currentSelectedItem = position;
+    }
+
+    /**
+     * returns the selected list ( expandable or listview)
+     *  0 -> expandable
+     *  1 -> normal list
+     */
+    private int getSelectedList() {
+        return selectedList;
+    }
+
+    private int getSelectedItem() {
+        return this.currentSelectedItem;
+    }
+
+
 
     private void openMainFragement(String module) {
         android.app.FragmentManager fragmentManager = getFragmentManager();
@@ -255,24 +331,9 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-
-        outState.putInt(CURRENTSTATEKEY, currentSelectedItem);
-
-
-    }
-
-    private void saveNavigationState() {
-        //get current selected module -> if not null
-        int current = 0;
-        SharedPreferences sharedPreferences = getSharedPreferences(CURRENTSTATE, MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        if (currentSelectedItem != 0) {
-            current = currentSelectedItem;
-        }
-
-        editor.putInt(CURRENTSTATEKEY, current);
-        Log.d(TAG, current + " was saved to shared.");
+        //save position and curent list
+        outState.putInt(CURRENTITEM, getSelectedItem());
+        outState.putInt(CURRENTLIST, getSelectedList());
 
 
     }

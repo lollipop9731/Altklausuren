@@ -3,6 +3,7 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 27
     defaultConfig {
+        multiDexEnabled true
         applicationId 'com.example.loren.altklausuren'
         minSdkVersion 16
         targetSdkVersion 27
@@ -48,6 +49,8 @@ dependencies {
 
     implementation 'com.itextpdf:itextg:5.5.10'
     implementation 'id.zelory:compressor:2.1.0'
+
+    implementation 'com.android.support:multidex:1.0.3'
 
 
 }
