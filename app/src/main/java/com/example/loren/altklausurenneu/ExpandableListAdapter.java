@@ -93,11 +93,19 @@ public class ExpandableListAdapter extends BaseExpandableListAdapter {
 
         txtListChild.setText(childText);
 
+        if(isLastChild){
+            //add + in left at last child
+            txtListChild.setPadding(180,0,0,0);
+            txtListChild.setCompoundDrawablesWithIntrinsicBounds(context.getResources().getDrawable(R.drawable.ic_add_black_24dp),null,null,null);
+            txtListChild.setCompoundDrawablePadding(24);
+        }
+
 
         if(childPosition==getPosition()){
 
             txtListChild.setTextColor(context.getResources().getColor(R.color.colorPrimary));
             txtListChild.setBackgroundColor(context.getResources().getColor(R.color.grey));
+
         }
 
         return convertView;

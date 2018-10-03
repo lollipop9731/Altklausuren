@@ -1,5 +1,6 @@
 package com.example.loren.altklausurenneu;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -236,6 +237,7 @@ public class MainActivity extends AppCompatActivity
 
                 android.app.FragmentManager fragmentManager = getFragmentManager();
                 android.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                Fragment fragment = new ProtocolFragment();
 
 
                 switch (position) {
@@ -254,6 +256,8 @@ public class MainActivity extends AppCompatActivity
 
                     case 2:
                         Toast.makeText(getApplicationContext(), "Position: " + position, Toast.LENGTH_SHORT).show();
+                        fragmentTransaction.replace(R.id.fragment_container,fragment);
+                        fragmentTransaction.commit();
 
                         break;
 
@@ -289,6 +293,7 @@ public class MainActivity extends AppCompatActivity
         module.add("Entrepreneurship");
         module.add("ERP-Systeme");
         module.add("Betriebssysteme");
+        module.add("Modul hinzufügen...");
 
         listDataChild.put(listDataHeader.get(0), module);
     }

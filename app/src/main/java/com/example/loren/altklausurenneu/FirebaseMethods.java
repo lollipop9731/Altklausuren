@@ -65,16 +65,20 @@ public class FirebaseMethods {
     private StorageReference Reference;
     private DatabaseReference databaseReference = getDatabase().getReference("exams");
 
-    public void updateChild(String child,String newvalue){
-        databaseReference.child(child).setValue(newvalue);
 
-    }
+
 
     public void setMethodsInter(FireBaseMethodsInter methodsInter) {
         this.methodsInter = methodsInter;
 
     }
 
+    /**
+     *
+     * @param childtype url, name, ...
+     * @param key the searched value
+     * @return
+     */
     public Query selectExamByChild(String childtype, String key) {
         return databaseReference.orderByChild(childtype).equalTo(key);
     }

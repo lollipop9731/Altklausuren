@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:id="@+id/fragment_constraint"
     android:layout_height="match_parent">
 
     <Button
-        android:id="@+id/button2"
+        android:id="@+id/testbutton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="160dp"
@@ -16,4 +16,51 @@
         android:text="Button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/Statistik"
+        android:layout_width="wrap_content"
+        android:layout_height="35dp"
+        android:layout_marginBottom="184dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/modul_button_style"
+        android:drawableLeft="@drawable/ic_add_thin"
+        android:drawablePadding="8dp"
+        android:fontFamily="@string/font_fontFamily_light"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:text="Statistik"
+
+        android:textAllCaps="false"
+        android:textColor="#074FF2"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+    <Button
+        android:id="@+id/button7"
+        android:layout_width="wrap_content"
+        android:layout_height="35dp"
+        android:layout_marginBottom="184dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/modul_button_style"
+        android:drawableLeft="@drawable/ic_add_thin"
+        android:drawablePadding="8dp"
+        android:fontFamily="@string/font_fontFamily_light"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp"
+        android:text="Electronic Business"
+
+
+        android:textAllCaps="false"
+        android:textColor="#074FF2"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.686"
+        app:layout_constraintStart_toEndOf="@+id/Statistik" />
+
 </android.support.constraint.ConstraintLayout>

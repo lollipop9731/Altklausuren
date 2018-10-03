@@ -39,6 +39,10 @@
         <item name="android:textSize">14sp</item>
     </style>
 
+    <style name="AlertDialogCustom" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:colorAccent">@color/colorPrimary</item>
+    </style>
+
     <!-- Style for button in NewExamDialog -->
     <style name="MediumButton" parent="@android:style/Widget.DeviceDefault.Button.Borderless">
         <item name="android:textAllCaps">false</item>

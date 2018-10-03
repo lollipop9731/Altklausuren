@@ -1,8 +1,10 @@
 package com.example.loren.altklausurenneu;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,7 +14,9 @@ import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,6 +27,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.loren.altklausurenneu.Utils.Utils;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -42,7 +47,7 @@ import io.github.yavski.fabspeeddial.FabSpeedDial;
 import static android.app.Activity.RESULT_OK;
 
 
-public class MainFragment extends android.app.Fragment implements FirebaseMethods.FireBaseMethodsInter{
+public class MainFragment extends android.app.Fragment implements FirebaseMethods.FireBaseMethodsInter {
 
     ListView listViewExam;
 
@@ -138,19 +143,17 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
         if (requestCode == REQUEST_TAKE_PHOTO && resultCode == RESULT_OK) {
 
 
-            Log.d(TAG,"Photo file:" +mCurrentPhotoPath);
+            Log.d(TAG, "Photo file:" + mCurrentPhotoPath);
             File file = new File(mCurrentPhotoPath);
             Uri uri = Uri.fromFile(file);
 
             // new try :
-            Intent intent = new Intent(getActivity(),CameraViewer.class);
+            Intent intent = new Intent(getActivity(), CameraViewer.class);
             intent.setData(uri);
             startActivity(intent);
 
 
-
-            Log.d(TAG,"Current Uri: "+uri.toString());
-
+            Log.d(TAG, "Current Uri: " + uri.toString());
 
 
         }
@@ -161,8 +164,7 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
 
-     View view = inflater.inflate(R.layout.fragment_main,container,false);
-
+        View view = inflater.inflate(R.layout.fragment_main, container, false);
 
 
         context = getActivity();
@@ -188,9 +190,76 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
         }
 
 
-
-
         return view;
+    }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        MenuInflater menuInflater = getActivity().getMenuInflater();
+        menuInflater.inflate(R.menu.context_menu, menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        switch (item.getItemId()) {
+            case R.id.context_edit:
+                //todo method for edit name
+                return true;
+            case R.id.context_delete:
+                Exam exame_delete = exams.get(info.position);
+                deleteExam(exame_delete.getDownloadurl());
+
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
+
+    /**
+     * @param downloadurl URL of exam to be deleted
+     */
+    private void deleteExam(final String downloadurl) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.AlertDialogCustom)
+                .setTitle("Endgültig löschen")
+                .setMessage("Soll das Element gelöscht werden? Dies kann nicht rückgängig gemacht werden.")
+                .setPositiveButton("Löschen", new DialogInterface.OnClickListener() {
+                    //Element löschen
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        Query query = firebaseMethods.selectExamByChild("downloadurl", downloadurl);
+                        query.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                                    //iterate through all children and delete the wanted
+                                    snapshot.getRef().removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            showSnackbar("Erfolgreich gelöscht", rootview);
+                                        }
+                                    });
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                            }
+                        });
+                    }
+                })
+                .setNegativeButton("Abbrechen", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+
+
     }
 
     @Override
@@ -201,19 +270,25 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
         //declare firebase method, set interface
         firebaseMethods = new FirebaseMethods(getActivity());
         fireBaseMethodsInter = this;
+
         firebaseMethods.setMethodsInter(fireBaseMethodsInter);
-        if(getModule().equals(MainActivity.USERID)){
+
+
+        if (getModule().equals(MainActivity.USERID)) {
+            //own protocolls
             Query query = firebaseMethods.selectAllExamsFromUser(mAuth.getUid());
             query.addValueEventListener(getDataValueEvent());
-        }else{
-            Query query = firebaseMethods.selectExamByChild("name",getModule());
+            //proide context menu for edit
+            registerForContextMenu(listViewExam);
+
+
+        } else {
+            Query query = firebaseMethods.selectExamByChild("name", getModule());
             query.addValueEventListener(getDataValueEvent());
         }
 
 
-
-
-       // mDatabase.addValueEventListener(getDataValueEvent());
+        // mDatabase.addValueEventListener(getDataValueEvent());
         //Listener for clicks of FAB
         fabSpeedDial.setMenuListener(new FabSpeedDial.MenuListener() {
             @Override
@@ -234,7 +309,7 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
 
                     //take photo
                     case R.id.menu_uploadtip:
-                        Intent intent = new Intent(getActivity(),CameraViewer.class);
+                        Intent intent = new Intent(getActivity(), CameraViewer.class);
 
                         startActivity(intent);
 
@@ -259,16 +334,16 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         Exam current = exams.get(position);
                         Intent intent = new Intent(getActivity(), PdfViewer.class);
-                        Log.d(TAG,"Current Download: "+ current.getDownloadurl());
-                        intent.putExtra(BUNDLE_DOWNLOAD_URL,current.getDownloadurl());
+                        Log.d(TAG, "Current Download: " + current.getDownloadurl());
+                        intent.putExtra(BUNDLE_DOWNLOAD_URL, current.getDownloadurl());
                         //todo open intent with glide, if not pdf but jpg
                         startActivity(intent);
 
 
-
-
                     }
                 });
+
+
     }
 
     /**
@@ -277,19 +352,18 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
     public void init() {
 
 
-
         //delete all temp pictures if some are left
         File dir = new File(getActivity().getExternalFilesDir("images/temp").toString());
-        if(dir.isDirectory()){
-            String [] children = dir.list();
-            for(int i = 0;i< children.length;i++){
-                Boolean deleted = new File(dir,children[i]).delete();
-                Log.d(TAG,"Files on created deleted: "+deleted);
+        if (dir.isDirectory()) {
+            String[] children = dir.list();
+            for (int i = 0; i < children.length; i++) {
+                Boolean deleted = new File(dir, children[i]).delete();
+                Log.d(TAG, "Files on created deleted: " + deleted);
             }
         }
 
         //todo handle persistence
-       // Utils.getDatabase();
+        // Utils.getDatabase();
         exam = new Exam();
 
 
@@ -363,13 +437,13 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
 
     @Override
     public void onDownloadSuccess(Boolean downloaded) {
-        Log.d(TAG,"interface fired");
-        if(downloaded){
+        Log.d(TAG, "interface fired");
+        if (downloaded) {
             snackbar.dismiss();
-            Log.d(TAG,"File successfully downloaded");
-        }else{
-            Log.d(TAG,"File could not be downloaded.");
-            showSnackbar("Datei konnte nicht heruntergeladen werden.",rootview);
+            Log.d(TAG, "File successfully downloaded");
+        } else {
+            Log.d(TAG, "File could not be downloaded.");
+            showSnackbar("Datei konnte nicht heruntergeladen werden.", rootview);
         }
     }
 
@@ -382,9 +456,9 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
         Snackbar.make(view.findViewById(android.R.id.content), message, Snackbar.LENGTH_SHORT).show();
     }
 
-    public void showDialog()    {
+    public void showDialog() {
 
-        if(exam.getFilepath().contains(".pdf")){
+        if (exam.getFilepath().contains(".pdf")) {
             final NewExamDialog examDialog = DialogFactory.makePDFExamDialog(getModule(),
                     R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
 
@@ -394,29 +468,28 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
                             exam.setSemester(semester);
 
 
-
                             Log.d(TAG, "Dialog wurde gezeigt.");
 
 
                             //upload chosen file to storage
-                            firebaseMethods.uploadFileToStorageNEW(getFileData(),exam.getFilepath());
+                            firebaseMethods.uploadFileToStorageNEW(getFileData(), exam.getFilepath());
 
-                            showProgressSnackbar("Datei wird hochgeladen...",rootview);
+                            showProgressSnackbar("Datei wird hochgeladen...", rootview);
 
 
                             firebaseMethods.setMethodsInter(new FirebaseMethods.FireBaseMethodsInter() {
                                 @Override
                                 public void onUploadSuccess(String filepath, String downloadurl) {
-                                    if(filepath.equals("Fail")){
+                                    if (filepath.equals("Fail")) {
                                         snackbar.dismiss();
-                                        showSnackbar("Upload fehlgeschlagen",rootview);
-                                    }else{
+                                        showSnackbar("Upload fehlgeschlagen", rootview);
+                                    } else {
                                         Log.d(TAG, "Upload erfolgreich");
                                         //set Filepath and Download URL if upload was successful, get from FireBaseMethods
                                         exam.setFilepath(filepath);
                                         exam.setDownloadurl(downloadurl);
                                         exam.setName(getModule());
-                                        Log.d(TAG, "Download url set: "+ exam.getDownloadurl());
+                                        Log.d(TAG, "Download url set: " + exam.getDownloadurl());
 
                                         //if upload was successfull write new Databaseentry
                                         firebaseMethods.uploadNewExam(exam);
@@ -439,7 +512,7 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
             examDialog.show(getFragmentManager(), NewExamDialog.TAG);
         }
         //todo dont need jpg anymore
-        if(exam.getFilepath().contains(".jpg")){
+        if (exam.getFilepath().contains(".jpg")) {
             final NewExamDialog examDialog = DialogFactory.makeJPEGExamDialog(getModule(),
                     R.string.dialog_button, R.array.category, new NewExamDialog.ButtonDialogAction() {
 
@@ -455,16 +528,16 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
                             //upload chosen file to storage
                             firebaseMethods.uploadFileToStorageNEW(getFileData(), exam.getFilepath());
 
-                            showProgressSnackbar("Datei wird hochgeladen...",rootview);
+                            showProgressSnackbar("Datei wird hochgeladen...", rootview);
 
 
                             firebaseMethods.setMethodsInter(new FirebaseMethods.FireBaseMethodsInter() {
                                 @Override
-                                public void onUploadSuccess(String filepath,String download) {
+                                public void onUploadSuccess(String filepath, String download) {
                                     //set Filepath and Download URL if upload was successful, get from FireBaseMethods
                                     exam.setFilepath(filepath);
                                     exam.setDownloadurl(download);
-                                    Log.d(TAG, "Download url set: "+ exam.getDownloadurl());
+                                    Log.d(TAG, "Download url set: " + exam.getDownloadurl());
 
                                     //if upload was successfull write new Databaseentry
                                     firebaseMethods.uploadNewExam(exam);
@@ -486,10 +559,30 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
         }
 
 
-
     }
 
+    /**
+     * @param child    the child to be updated (name -> for name)
+     * @param newvalue the new String value
+     * @param oldvalue old value that has to be updated
+     */
+    public void updateName(final String child, final String newvalue, String oldvalue) {
+        Query querymath = firebaseMethods.selectExamByChild(child, oldvalue);
+        querymath.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    //iterate through all children
+                    snapshot.getRef().child(child).setValue(newvalue);
+                }
+            }
 
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+                Log.d(TAG, "Updating name failed: " + databaseError.getMessage());
+            }
+        });
+    }
 
 
     /**
@@ -518,9 +611,10 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
 
     /**
      * shows Snackbar with progress turning circle
+     *
      * @param text Message to be displayed in Snackbar
      */
-    public void showProgressSnackbar(String text,View rootview) {
+    public void showProgressSnackbar(String text, View rootview) {
         snackbar = Snackbar.make(rootview.findViewById(android.R.id.content), text, Snackbar.LENGTH_INDEFINITE);
         ViewGroup contentLay = (ViewGroup) snackbar.getView().findViewById(android.support.design.R.id.snackbar_text).getParent();
         ProgressBar item = new ProgressBar(getActivity());
