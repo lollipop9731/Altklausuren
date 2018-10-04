@@ -96,7 +96,7 @@ public class MainActivity extends AppCompatActivity
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         // get the current position of navigation drawer and if on expandable list or not
-        setSelectedItem(savedInstanceState.getInt(CURRENTLIST),savedInstanceState.getInt(CURRENTITEM));
+        setSelectedItem(savedInstanceState.getInt(CURRENTLIST), savedInstanceState.getInt(CURRENTITEM));
     }
 
     @Override
@@ -104,7 +104,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Log.d(TAG,"Selected ITEM: "+getSelectedItem());
+        Log.d(TAG, "Selected ITEM: " + getSelectedItem());
 
 
         context = getApplicationContext();
@@ -114,8 +114,6 @@ public class MainActivity extends AppCompatActivity
 
 
         init();
-
-
 
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -154,23 +152,23 @@ public class MainActivity extends AppCompatActivity
 
 
         navigationDrawerListAdapter = new NavigationDrawerListAdapter(MainActivity.this, navdrawerheader);
-        if(getSelectedList()==0){
+        if (getSelectedList() == 0) {
             navigationDrawerListAdapter.setPosition(NOTCHOOSEN);
             expandableListAdapter.setPosition(getSelectedItem());
         }
         //custom Position on start
         navigationDrawerListAdapter.setPosition(0);
-        setSelectedItem(LISTVIEW,0);
+        setSelectedItem(LISTVIEW, 0);
 
         navList.setAdapter(navigationDrawerListAdapter);
 
         drawer.addDrawerListener(new DrawerLayout.DrawerListener() {
             @Override
             public void onDrawerSlide(@NonNull View drawerView, float slideOffset) {
-                if(getSelectedList()==0){
+                if (getSelectedList() == 0) {
                     //expandable list was chosen -> must expand
                     expandableListView.expandGroup(0);
-                }else{
+                } else {
                     expandableListView.collapseGroup(0);
                 }
             }
@@ -183,7 +181,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onDrawerClosed(@NonNull View drawerView) {
 
-                if (getSelectedList()==0) {
+                if (getSelectedList() == 0) {
                     //expandable list was chosen -> set false position
                     navigationDrawerListAdapter.setPosition(NOTCHOOSEN);
 
@@ -192,7 +190,7 @@ public class MainActivity extends AppCompatActivity
                     //expandable list selected
                     expandableListAdapter.setPosition(currentSelectedItem);
                     expandableListView.setAdapter(expandableListAdapter);
-                }else{
+                } else {
                     //normal list view chosen
                     navigationDrawerListAdapter.setPosition(getSelectedItem());
                     navList.setAdapter(navigationDrawerListAdapter);
@@ -255,8 +253,8 @@ public class MainActivity extends AppCompatActivity
                         break;
 
                     case 2:
-                        Toast.makeText(getApplicationContext(), "Position: " + position, Toast.LENGTH_SHORT).show();
-                        fragmentTransaction.replace(R.id.fragment_container,fragment);
+
+                        fragmentTransaction.replace(R.id.fragment_container, fragment);
                         fragmentTransaction.commit();
 
                         break;
@@ -305,8 +303,8 @@ public class MainActivity extends AppCompatActivity
 
     /**
      * returns the selected list ( expandable or listview)
-     *  0 -> expandable
-     *  1 -> normal list
+     * 0 -> expandable
+     * 1 -> normal list
      */
     private int getSelectedList() {
         return selectedList;
@@ -315,7 +313,6 @@ public class MainActivity extends AppCompatActivity
     private int getSelectedItem() {
         return this.currentSelectedItem;
     }
-
 
 
     private void openMainFragement(String module) {

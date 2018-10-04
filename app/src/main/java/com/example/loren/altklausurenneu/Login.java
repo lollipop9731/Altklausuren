@@ -158,10 +158,11 @@ public class Login extends AppCompatActivity {
             return;
         }
 
-        if(!emailstring.contains("student.fh-kiel.de")){
+        //todo uncomment! only for testing purpose
+       /* if(!emailstring.contains("student.fh-kiel.de")){
             emailfield.setError("Bitte FH-Kiel E-Mail nutzen.");
             return;
-        }
+        }*/
 
 
         sendSignInLink(emailstring);
