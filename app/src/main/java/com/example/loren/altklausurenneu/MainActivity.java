@@ -8,6 +8,8 @@ import android.os.Bundle;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -236,6 +238,10 @@ public class MainActivity extends AppCompatActivity
                 android.app.FragmentManager fragmentManager = getFragmentManager();
                 android.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 Fragment fragment = new ProtocolFragment();
+                Fragment fragment1 = GridView.newInstance();
+
+                FragmentManager support = getSupportFragmentManager();
+                FragmentTransaction fragmentTransactionsupport = support.beginTransaction();
 
 
                 switch (position) {
@@ -254,7 +260,7 @@ public class MainActivity extends AppCompatActivity
 
                     case 2:
 
-                        fragmentTransaction.replace(R.id.fragment_container, fragment);
+                        fragmentTransaction.replace(R.id.fragment_container,fragment1);
                         fragmentTransaction.commit();
 
                         break;
