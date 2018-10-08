@@ -3,13 +3,22 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="4dp"
+    android:orientation="vertical"
     tools:context="com.example.loren.altklausurenneu.GridView">
 
     <!-- TODO: Update blank fragment layout -->
 
+    <TextView
+        android:id="@+id/textView2"
+        android:layout_width="wrap_content"
+        android:layout_height="22dp"
+        android:textColor="@color/colorPrimary"
+        android:fontFamily="@string/font_fontFamily_medium"
+        android:text="Modulvorschläge" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_modul"
-
+        android:layoutAnimation="@anim/layout_animation_slide_from_right"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 </LinearLayout>

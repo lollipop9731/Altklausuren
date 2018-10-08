@@ -52,6 +52,7 @@ dependencies {
     implementation 'id.zelory:compressor:2.1.0'
 
     implementation 'com.android.support:multidex:1.0.3'
+    implementation 'com.beloo.widget:ChipsLayoutManager:0.3.7@aar'
 
 
 }

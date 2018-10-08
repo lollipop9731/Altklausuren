@@ -9,17 +9,19 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder> {
 
-    private String[] mData;
+    private ArrayList<String> myDataset;
     private LayoutInflater mInflater;
     private ItemClickListener mClickListener;
     private Context context;
 
     // data is passed into the constructor
-       MyRecyclerViewAdapter(Context context, String[] data) {
+       MyRecyclerViewAdapter(Context context, ArrayList<String> myDataset) {
         this.mInflater = LayoutInflater.from(context);
-        this.mData = data;
+        this.myDataset = myDataset;
         this.context = context;
     }
 
@@ -35,14 +37,14 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
            //set data and image to grid view
-        holder.myTextView.setText(mData[position]);
+        holder.myTextView.setText(myDataset.get(position));
         holder.vector_animate.setImageDrawable(context.getDrawable(R.drawable.animated_vector));
     }
 
     // total number of cells
     @Override
     public int getItemCount() {
-        return mData.length;
+        return myDataset.size();
     }
 
 
@@ -67,7 +69,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     // convenience method for getting data at click position
     String getItem(int id) {
-        return mData[id];
+        return myDataset.get(id);
     }
 
     // allows clicks events to be caught
@@ -78,5 +80,12 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     // parent activity will implement this method to respond to click events
     public interface ItemClickListener {
         void onItemClick(View view, int position);
+    }
+
+    public void removeAt(int position){
+           myDataset.remove(position);
+           notifyItemRemoved(position);
+           notifyItemRangeChanged(position,getItemCount());
+
     }
 }

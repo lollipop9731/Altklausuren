@@ -15,12 +15,17 @@ import android.support.constraint.ConstraintLayout;
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.beloo.widget.chipslayoutmanager.ChipsLayoutManager;
+
+import java.util.ArrayList;
 
 
 /**
@@ -78,14 +83,33 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
         RecyclerView recyclerView = (RecyclerView) getActivity().findViewById(
                 R.id.recycler_modul);
 
+        // try of Chips layout manager
 
-        final String[] data = {"Betriebssysteme", "Statistik", "Mathematische Grundlagen I", "IT-Security & Business Continuity Management", "ERP-Systeme", "Mobile Systeme", "Wirtschaftsinformatik", "Mathematische Grundlagen I", "Statistik", "Datenbanken"};
-        int numberOfColumns = 2;
-        recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), numberOfColumns));
+
+        ChipsLayoutManager chipsLayoutManager = ChipsLayoutManager.newBuilder(getContext())
+                //set vertical gravity for all items in a row. Default = Gravity.CENTER_VERTICAL
+                .setChildGravity(Gravity.LEFT)
+                .setRowStrategy(ChipsLayoutManager.STRATEGY_FILL_VIEW)
+                .build();
+
+
+
+        final ArrayList<String> data = new ArrayList<>();
+        data.add("Betriebssysteme");
+        data.add("Mobile Systeme");
+        data.add("Entrepreneurship");
+        data.add("Statistik");
+        data.add("IT-Security & Business Continuity");
+
+        recyclerView.setLayoutManager(chipsLayoutManager);
+
         adapter = new MyRecyclerViewAdapter(getActivity(), data);
         adapter.setClickListener(new MyRecyclerViewAdapter.ItemClickListener() {
             @Override
             public void onItemClick(final View view, int position) {
+
+                adapter.removeAt(position);
+
                 //views of item view
                 final ImageView vector = view.findViewById(R.id.animate_vector);
                 final TextView textView = view.findViewById(R.id.infotext);
