@@ -2,6 +2,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="4dp"
     android:orientation="vertical"
     tools:context="com.example.loren.altklausurenneu.GridView">
@@ -18,7 +19,29 @@
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_modul"
-        android:layoutAnimation="@anim/layout_animation_slide_from_right"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="wrap_content"
+        android:layoutAnimation="@anim/layout_animation_slide_from_right" />
+
+    <TextView
+        android:id="@+id/textView3"
+        android:layout_width="wrap_content"
+        android:layout_height="22dp"
+        android:textColor="@color/colorPrimary"
+        android:fontFamily="@string/font_fontFamily_medium"
+        android:text="Meine Module" />
+
+    <com.example.loren.altklausurenneu.ModulView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/modul_custom_view"
+        app:Modul_name="Mathematische Basiscs">
+
+    </com.example.loren.altklausurenneu.ModulView>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recycler_chosen_moduls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layoutAnimation="@anim/layout_animation_slide_from_right" />
 </LinearLayout>

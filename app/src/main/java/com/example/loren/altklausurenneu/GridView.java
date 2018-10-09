@@ -24,6 +24,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.beloo.widget.chipslayoutmanager.ChipsLayoutManager;
+import com.example.loren.altklausurenneu.Utils.State;
 
 import java.util.ArrayList;
 
@@ -38,10 +39,11 @@ import java.util.ArrayList;
  */
 public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClickListener {
     // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+
+    ModulView modulView;
+
     MyRecyclerViewAdapter adapter;
+    MyRecyclerViewAdapter adapter_chosen;
 
 
     @Override
@@ -83,9 +85,13 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
         RecyclerView recyclerView = (RecyclerView) getActivity().findViewById(
                 R.id.recycler_modul);
 
-        // try of Chips layout manager
+        final RecyclerView recyclerViewMyModuls = (RecyclerView)getActivity().findViewById(R.id.recycler_chosen_moduls);
+
+        //try with custom Modul view
+        modulView = (ModulView)getActivity().findViewById(R.id.modul_custom_view);
 
 
+        // try of Chips layout manager for modul pool
         ChipsLayoutManager chipsLayoutManager = ChipsLayoutManager.newBuilder(getContext())
                 //set vertical gravity for all items in a row. Default = Gravity.CENTER_VERTICAL
                 .setChildGravity(Gravity.LEFT)
@@ -93,7 +99,14 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
                 .build();
 
 
+        ChipsLayoutManager chipsLayoutManagerModulPool = ChipsLayoutManager.newBuilder(getContext())
+                //set vertical gravity for all items in a row. Default = Gravity.CENTER_VERTICAL
+                .setChildGravity(Gravity.LEFT)
+                .setRowStrategy(ChipsLayoutManager.STRATEGY_FILL_VIEW)
+                .build();
 
+
+        //Array List for moduls
         final ArrayList<String> data = new ArrayList<>();
         data.add("Betriebssysteme");
         data.add("Mobile Systeme");
@@ -101,14 +114,27 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
         data.add("Statistik");
         data.add("IT-Security & Business Continuity");
 
-        recyclerView.setLayoutManager(chipsLayoutManager);
+        //Array list for chosen moduls
+        final ArrayList<String> chosenmoduls = new ArrayList<>();
 
+        recyclerView.setLayoutManager(chipsLayoutManager);
+        recyclerViewMyModuls.setLayoutManager(chipsLayoutManagerModulPool);
+        //adapter for chosen moduls
+        adapter_chosen = new MyRecyclerViewAdapter(getActivity(),chosenmoduls);
+
+//adapter for modulpool
         adapter = new MyRecyclerViewAdapter(getActivity(), data);
         adapter.setClickListener(new MyRecyclerViewAdapter.ItemClickListener() {
             @Override
             public void onItemClick(final View view, int position) {
 
-                adapter.removeAt(position);
+                //try with custom modul view
+
+
+                //add modul to chosen moduls
+                chosenmoduls.add(data.get(position));
+                adapter_chosen.notifyDataSetChanged();
+
 
                 //views of item view
                 final ImageView vector = view.findViewById(R.id.animate_vector);
@@ -118,6 +144,7 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
 
                 //if view was clicked -> active
                 if (view.isActivated()) {
+                    modulView.setState(State.DESELECTED);
                     //unselect view
                     constraintLayout.setBackgroundColor(getActivity().getResources().getColor(R.color.mywhite));
                     textView.setTextColor(getActivity().getResources().getColor(R.color.colorPrimary));
@@ -128,6 +155,7 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
                     }
                     drawable.setTint(getActivity().getResources().getColor(R.color.colorPrimary));
                 } else {
+                    modulView.setState(State.SELECTED);
                     // select view
                     constraintLayout.setBackgroundColor(getActivity().getResources().getColor(R.color.colorPrimary));
                     animate(drawable);
@@ -138,10 +166,13 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
 
                 }
 
+                adapter.removeAt(position);
+
 
             }
         });
         recyclerView.setAdapter(adapter);
+        recyclerViewMyModuls.setAdapter(adapter_chosen);
 
 
         super.onViewCreated(view, savedInstanceState);
