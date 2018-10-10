@@ -1,27 +1,18 @@
 package com.example.loren.altklausurenneu;
 
 import android.app.Fragment;
-import android.content.Context;
-import android.graphics.Canvas;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import android.support.constraint.ConstraintLayout;
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import com.beloo.widget.chipslayoutmanager.ChipsLayoutManager;
 import com.example.loren.altklausurenneu.Utils.State;
@@ -37,7 +28,7 @@ import java.util.ArrayList;
  * Use the {@link GridView#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClickListener {
+public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClickListenerInterface {
     // TODO: Rename parameter arguments, choose names that match
 
     ModulView modulView;
@@ -87,8 +78,7 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
 
         final RecyclerView recyclerViewMyModuls = (RecyclerView)getActivity().findViewById(R.id.recycler_chosen_moduls);
 
-        //try with custom Modul view
-        modulView = (ModulView)getActivity().findViewById(R.id.modul_custom_view);
+
 
 
         // try of Chips layout manager for modul pool
@@ -119,60 +109,33 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
 
         recyclerView.setLayoutManager(chipsLayoutManager);
         recyclerViewMyModuls.setLayoutManager(chipsLayoutManagerModulPool);
+
         //adapter for chosen moduls
-        adapter_chosen = new MyRecyclerViewAdapter(getActivity(),chosenmoduls);
+        adapter_chosen = new MyRecyclerViewAdapter(getActivity(),chosenmoduls,true);
+        adapter_chosen.setAllselected(true);
 
-//adapter for modulpool
-        adapter = new MyRecyclerViewAdapter(getActivity(), data);
-        adapter.setClickListener(new MyRecyclerViewAdapter.ItemClickListener() {
+        //adapter for modulpool
+        adapter = new MyRecyclerViewAdapter(getActivity(), data,false);
+        adapter.setClickListener(new MyRecyclerViewAdapter.ItemClickListenerInterface() {
             @Override
-            public void onItemClick(final View view, int position) {
-
-                //try with custom modul view
-
-
-                //add modul to chosen moduls
-                chosenmoduls.add(data.get(position));
-                adapter_chosen.notifyDataSetChanged();
-
-
-                //views of item view
-                final ImageView vector = view.findViewById(R.id.animate_vector);
-                final TextView textView = view.findViewById(R.id.infotext);
-                final ConstraintLayout constraintLayout = view.findViewById(R.id.constraint_id);
-                final Drawable drawable = vector.getDrawable();
-
-                //if view was clicked -> active
-                if (view.isActivated()) {
-                    modulView.setState(State.DESELECTED);
-                    //unselect view
-                    constraintLayout.setBackgroundColor(getActivity().getResources().getColor(R.color.mywhite));
-                    textView.setTextColor(getActivity().getResources().getColor(R.color.colorPrimary));
-                    view.setActivated(false);
-                    //todo add version for api below 23
-                    if (drawable instanceof AnimatedVectorDrawable) {
-                        ((AnimatedVectorDrawable) drawable).reset();
-                    }
-                    drawable.setTint(getActivity().getResources().getColor(R.color.colorPrimary));
-                } else {
+            public void onItemClick(View view, int position) {
+                ModulView modulView = (ModulView)view;
+                if(modulView.getState()==State.DESELECTED){
                     modulView.setState(State.SELECTED);
-                    // select view
-                    constraintLayout.setBackgroundColor(getActivity().getResources().getColor(R.color.colorPrimary));
-                    animate(drawable);
-                    view.setActivated(true);
-                    textView.setTextColor(getActivity().getResources().getColor(R.color.mywhite));
-                    drawable.setTint(getActivity().getResources().getColor(R.color.mywhite));
-
-
+                    chosenmoduls.add(data.get(position));
+                    adapter_chosen.notifyDataSetChanged();
+                    adapter.removeAt(position);
+                }else{
+                    modulView.setState(State.DESELECTED);
                 }
-
-                adapter.removeAt(position);
 
 
             }
         });
+
         recyclerView.setAdapter(adapter);
         recyclerViewMyModuls.setAdapter(adapter_chosen);
+
 
 
         super.onViewCreated(view, savedInstanceState);

@@ -6,39 +6,63 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.TimePicker;
+import android.widget.Toast;
+
+import com.example.loren.altklausurenneu.Utils.State;
 
 import java.util.ArrayList;
 
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder> {
 
+
     private ArrayList<String> myDataset;
     private LayoutInflater mInflater;
-    private ItemClickListener mClickListener;
+    private ItemClickListenerInterface mClickListener;
     private Context context;
+private Boolean allselected;
+
+    public Boolean getAllselected() {
+        return allselected;
+    }
+
+    public void setAllselected(Boolean allselected) {
+        this.allselected = allselected;
+    }
 
     // data is passed into the constructor
-       MyRecyclerViewAdapter(Context context, ArrayList<String> myDataset) {
+       MyRecyclerViewAdapter(Context context, ArrayList<String> myDataset,Boolean allselected) {
         this.mInflater = LayoutInflater.from(context);
         this.myDataset = myDataset;
         this.context = context;
+        this.allselected = allselected;
+
     }
 
     // inflates the cell layout from xml when needed
     @Override
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = mInflater.inflate(R.layout.grid_recycler_item, parent, false);
-        return new ViewHolder(view);
+        ModulView modulView = new ModulView(parent.getContext());
+       // View view = mInflater.inflate(R.layout.grid_recycler_item, parent, false);
+        modulView.setLayoutParams(new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+
+
+        return new ViewHolder(modulView);
     }
 
     // binds the data to the TextView in each cell
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
            //set data and image to grid view
-        holder.myTextView.setText(myDataset.get(position));
-        holder.vector_animate.setImageDrawable(context.getDrawable(R.drawable.animated_vector));
+
+        holder.getModulView().setText(myDataset.get(position));
+        setClickListener(mClickListener);
+
+
     }
 
     // total number of cells
@@ -50,20 +74,38 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     // stores and recycles views as they are scrolled off screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView myTextView;
-        ImageView vector_animate;
+        private ModulView modulView;
+        TextView myTextview;
+
 
         ViewHolder(View itemView) {
             super(itemView);
-            myTextView = itemView.findViewById(R.id.infotext);
-            vector_animate = itemView.findViewById(R.id.animate_vector);
+            myTextview = itemView.findViewById(R.id.modul_text);
+            modulView = (ModulView) itemView;
 
-            itemView.setOnClickListener(this);
+            modulView.setOnClickListener(this);
         }
 
+        public ModulView getModulView(){
+            if(!getAllselected()){
+                return modulView;
+            }else{
+                modulView.setState(State.SELECTED);
+                return modulView;
+            }
+
+        }
+
+
+
+
         @Override
-        public void onClick(View view) {
-            if (mClickListener != null) mClickListener.onItemClick(view, getAdapterPosition());
+        public void onClick(View v) {
+            if(mClickListener!=null){
+                mClickListener.onItemClick(v,getAdapterPosition());
+
+            }
+
         }
     }
 
@@ -73,12 +115,12 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     }
 
     // allows clicks events to be caught
-    void setClickListener(ItemClickListener itemClickListener) {
+    void setClickListener(ItemClickListenerInterface itemClickListener) {
         this.mClickListener = itemClickListener;
     }
 
     // parent activity will implement this method to respond to click events
-    public interface ItemClickListener {
+    public interface ItemClickListenerInterface {
         void onItemClick(View view, int position);
     }
 
@@ -88,4 +130,6 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
            notifyItemRangeChanged(position,getItemCount());
 
     }
+
+
 }

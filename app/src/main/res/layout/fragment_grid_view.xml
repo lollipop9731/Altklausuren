@@ -31,13 +31,7 @@
         android:fontFamily="@string/font_fontFamily_medium"
         android:text="Meine Module" />
 
-    <com.example.loren.altklausurenneu.ModulView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/modul_custom_view"
-        app:Modul_name="Mathematische Basiscs">
 
-    </com.example.loren.altklausurenneu.ModulView>
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler_chosen_moduls"
