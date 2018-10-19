@@ -9,10 +9,12 @@ import android.support.annotation.Nullable;
 
 import android.support.graphics.drawable.AnimatedVectorDrawableCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.beloo.widget.chipslayoutmanager.ChipsLayoutManager;
 import com.example.loren.altklausurenneu.Utils.State;
@@ -20,27 +22,16 @@ import com.example.loren.altklausurenneu.Utils.State;
 import java.util.ArrayList;
 
 
-/**
- * A simple {@link Fragment} subclass.
- * Activities that contain this fragment must implement the
- * {@link GridView.OnFragmentInteractionListener} interface
- * to handle interaction events.
- * Use the {@link GridView#newInstance} factory method to
- * create an instance of this fragment.
- */
-public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClickListenerInterface {
+
+public class GridView extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
 
     ModulView modulView;
 
     MyRecyclerViewAdapter adapter;
     MyRecyclerViewAdapter adapter_chosen;
+    String TAG = getTag();
 
-
-    @Override
-    public void onItemClick(View view, int position) {
-
-    }
 
     public GridView() {
         // Required empty public constructor
@@ -58,17 +49,6 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
 
     }
 
-    public void animate(Drawable drawable) {
-
-
-        if (drawable instanceof AnimatedVectorDrawableCompat) {
-            AnimatedVectorDrawableCompat avd = (AnimatedVectorDrawableCompat) drawable;
-            avd.start();
-        } else if (drawable instanceof AnimatedVectorDrawable) {
-            AnimatedVectorDrawable animatedVectorDrawable = (AnimatedVectorDrawable) drawable;
-            animatedVectorDrawable.start();
-        }
-    }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
@@ -76,9 +56,7 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
         RecyclerView recyclerView = (RecyclerView) getActivity().findViewById(
                 R.id.recycler_modul);
 
-        final RecyclerView recyclerViewMyModuls = (RecyclerView)getActivity().findViewById(R.id.recycler_chosen_moduls);
-
-
+        final RecyclerView recyclerViewMyModuls = (RecyclerView) getActivity().findViewById(R.id.recycler_chosen_moduls);
 
 
         // try of Chips layout manager for modul pool
@@ -111,31 +89,31 @@ public class GridView extends Fragment implements MyRecyclerViewAdapter.ItemClic
         recyclerViewMyModuls.setLayoutManager(chipsLayoutManagerModulPool);
 
         //adapter for chosen moduls
-        adapter_chosen = new MyRecyclerViewAdapter(getActivity(),chosenmoduls,true);
-        adapter_chosen.setAllselected(true);
+        adapter_chosen = new MyRecyclerViewAdapter(getActivity(), chosenmoduls, true, new MyRecyclerViewAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(ModulView modulView, int position) {
+            //todo fill click listener for choosen moduls
+            }
+        });
+
 
         //adapter for modulpool
-        adapter = new MyRecyclerViewAdapter(getActivity(), data,false);
-        adapter.setClickListener(new MyRecyclerViewAdapter.ItemClickListenerInterface() {
+        adapter = new MyRecyclerViewAdapter(getActivity(), data, false, new MyRecyclerViewAdapter.OnItemClickListener() {
             @Override
-            public void onItemClick(View view, int position) {
-                ModulView modulView = (ModulView)view;
-                if(modulView.getState()==State.DESELECTED){
-                    modulView.setState(State.SELECTED);
-                    chosenmoduls.add(data.get(position));
-                    adapter_chosen.notifyDataSetChanged();
-                    adapter.removeAt(position);
-                }else{
-                    modulView.setState(State.DESELECTED);
-                }
+            public void onItemClick(ModulView modulView, int position) {
+
+
+                chosenmoduls.add(data.get(position));
+                adapter_chosen.notifyDataSetChanged();
+                adapter.removeAt(position);
 
 
             }
         });
 
+
         recyclerView.setAdapter(adapter);
         recyclerViewMyModuls.setAdapter(adapter_chosen);
-
 
 
         super.onViewCreated(view, savedInstanceState);

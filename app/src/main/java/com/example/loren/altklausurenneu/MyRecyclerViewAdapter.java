@@ -3,12 +3,11 @@ package com.example.loren.altklausurenneu;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.TimePicker;
-import android.widget.Toast;
 
 import com.example.loren.altklausurenneu.Utils.State;
 
@@ -19,9 +18,10 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     private ArrayList<String> myDataset;
     private LayoutInflater mInflater;
-    private ItemClickListenerInterface mClickListener;
+    private OnItemClickListener mClickListener;
     private Context context;
-private Boolean allselected;
+    private Boolean allselected;
+    String TAG = getClass().getSimpleName();
 
     public Boolean getAllselected() {
         return allselected;
@@ -32,11 +32,12 @@ private Boolean allselected;
     }
 
     // data is passed into the constructor
-       MyRecyclerViewAdapter(Context context, ArrayList<String> myDataset,Boolean allselected) {
+       MyRecyclerViewAdapter(Context context, ArrayList<String> myDataset,Boolean allselected,OnItemClickListener mClickListener) {
         this.mInflater = LayoutInflater.from(context);
         this.myDataset = myDataset;
         this.context = context;
         this.allselected = allselected;
+        this.mClickListener = mClickListener;
 
     }
 
@@ -44,8 +45,17 @@ private Boolean allselected;
     @Override
     @NonNull
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ModulView modulView = new ModulView(parent.getContext());
-       // View view = mInflater.inflate(R.layout.grid_recycler_item, parent, false);
+        ModulView modulView;
+        if(getAllselected()){
+            //on second list for chosen moduls
+            Log.d(TAG,"All selected");
+            modulView = new ModulView(parent.getContext(),State.SELECTED);
+
+        }else{
+            modulView = new ModulView(parent.getContext(),State.DESELECTED);
+        }
+
+
         modulView.setLayoutParams(new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT));
@@ -60,7 +70,8 @@ private Boolean allselected;
            //set data and image to grid view
 
         holder.getModulView().setText(myDataset.get(position));
-        setClickListener(mClickListener);
+        holder.bind(holder.modulView,this.mClickListener,position);
+
 
 
     }
@@ -73,7 +84,7 @@ private Boolean allselected;
 
 
     // stores and recycles views as they are scrolled off screen
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder      {
         private ModulView modulView;
         TextView myTextview;
 
@@ -83,30 +94,26 @@ private Boolean allselected;
             myTextview = itemView.findViewById(R.id.modul_text);
             modulView = (ModulView) itemView;
 
-            modulView.setOnClickListener(this);
-        }
+                    }
 
         public ModulView getModulView(){
-            if(!getAllselected()){
-                return modulView;
-            }else{
-                modulView.setState(State.SELECTED);
-                return modulView;
-            }
+          return modulView;
 
+        }
+
+        public void bind(final ModulView modulView, final OnItemClickListener itemClickListener, final int position){
+            modulView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    itemClickListener.onItemClick(modulView,position);
+                }
+            });
         }
 
 
 
 
-        @Override
-        public void onClick(View v) {
-            if(mClickListener!=null){
-                mClickListener.onItemClick(v,getAdapterPosition());
 
-            }
-
-        }
     }
 
     // convenience method for getting data at click position
@@ -114,14 +121,10 @@ private Boolean allselected;
         return myDataset.get(id);
     }
 
-    // allows clicks events to be caught
-    void setClickListener(ItemClickListenerInterface itemClickListener) {
-        this.mClickListener = itemClickListener;
-    }
 
     // parent activity will implement this method to respond to click events
-    public interface ItemClickListenerInterface {
-        void onItemClick(View view, int position);
+    public interface OnItemClickListener {
+        void onItemClick(ModulView modulView,int position);
     }
 
     public void removeAt(int position){
