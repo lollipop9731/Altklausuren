@@ -42,13 +42,12 @@ public class ModulView extends LinearLayout {
     }
 
 
-
-    public ModulView(Context context,State state) {
+    public ModulView(Context context, State state) {
         super(context);
 
         setOrientation(HORIZONTAL);
 
-        Log.d("ModulView", "Constructor geöffnet Hier");
+
         LayoutInflater.from(context).inflate(R.layout.modul_item, this, true);
 
 
@@ -64,13 +63,12 @@ public class ModulView extends LinearLayout {
         }
 
 
-
     }
 
     /**
      * Set the Modul view to chosen without animation
      */
-    public void setChosenState(){
+    public void setChosenState() {
         this.imageView.setImageDrawable(context.getDrawable(R.drawable.ic_check_white_24dp));
 
         name_modul.setTextColor(context.getColor(R.color.mywhite));
@@ -78,13 +76,10 @@ public class ModulView extends LinearLayout {
     }
 
 
-
     public void setText(String text) {
 
         name_modul.setText(text);
     }
-
-
 
 
 }

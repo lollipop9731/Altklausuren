@@ -311,6 +311,16 @@ public class Login extends AppCompatActivity {
                         if (task.isSuccessful()) {
                             Log.d(TAG, "signInWithEmailLink:success");
                             AuthResult result = task.getResult();
+                            //checks if user is logged in for the first time
+                            boolean isNew = task.getResult().getAdditionalUserInfo().isNewUser();
+                            Log.d("MyTAG", "onComplete: " + (isNew ? "new user" : "old user"));
+                            if(isNew){
+                                //save users date to firebaseDatabase
+                                User user = new User(mAuth.getUid(),mAuth.getCurrentUser().getEmail());
+                                FirebaseMethods firebaseMethods = new FirebaseMethods(getApplicationContext());
+                                firebaseMethods.uploadNewUser(user);
+                            }
+
 
                             startMain();
 

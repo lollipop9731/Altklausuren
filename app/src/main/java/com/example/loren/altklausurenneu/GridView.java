@@ -75,12 +75,12 @@ public class GridView extends Fragment {
 
 
         //Array List for moduls
-        final ArrayList<String> data = new ArrayList<>();
-        data.add("Betriebssysteme");
-        data.add("Mobile Systeme");
-        data.add("Entrepreneurship");
-        data.add("Statistik");
-        data.add("IT-Security & Business Continuity");
+        final ArrayList<String> poolmoduls = new ArrayList<>();
+        poolmoduls.add("Betriebssysteme");
+        poolmoduls.add("Mobile Systeme");
+        poolmoduls.add("Entrepreneurship");
+        poolmoduls.add("Statistik");
+        poolmoduls.add("IT-Security & Business Continuity");
 
         //Array list for chosen moduls
         final ArrayList<String> chosenmoduls = new ArrayList<>();
@@ -92,18 +92,22 @@ public class GridView extends Fragment {
         adapter_chosen = new MyRecyclerViewAdapter(getActivity(), chosenmoduls, true, new MyRecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(ModulView modulView, int position) {
-            //todo fill click listener for choosen moduls
+
+                //add to pool of moduls and remove from chosen moduls
+                poolmoduls.add(chosenmoduls.get(position));
+                adapter.notifyDataSetChanged();
+                adapter_chosen.removeAt(position);
             }
         });
 
 
         //adapter for modulpool
-        adapter = new MyRecyclerViewAdapter(getActivity(), data, false, new MyRecyclerViewAdapter.OnItemClickListener() {
+        adapter = new MyRecyclerViewAdapter(getActivity(), poolmoduls, false, new MyRecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(ModulView modulView, int position) {
 
 
-                chosenmoduls.add(data.get(position));
+                chosenmoduls.add(poolmoduls.get(position));
                 adapter_chosen.notifyDataSetChanged();
                 adapter.removeAt(position);
 

@@ -17,7 +17,7 @@
 
 
             >
-
+            <!-- Todo Why not white when clicked? -->
             <ImageView
                 android:id="@+id/modul_vector"
                 android:layout_width="wrap_content"

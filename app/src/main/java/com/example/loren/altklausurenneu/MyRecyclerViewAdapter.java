@@ -70,6 +70,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
            //set data and image to grid view
 
         holder.getModulView().setText(myDataset.get(position));
+        //binding for setting click listener interface
         holder.bind(holder.modulView,this.mClickListener,position);
 
 
@@ -105,6 +106,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
             modulView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+
                     itemClickListener.onItemClick(modulView,position);
                 }
             });
@@ -116,10 +118,6 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
 
     }
 
-    // convenience method for getting data at click position
-    String getItem(int id) {
-        return myDataset.get(id);
-    }
 
 
     // parent activity will implement this method to respond to click events

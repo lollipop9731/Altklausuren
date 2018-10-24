@@ -404,7 +404,7 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
                     for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
                         Exam exam;
                         exam = snapshot.getValue(Exam.class);
-                        Log.d(TAG, "User: " + exam.getDownloadurl());
+                        Log.d(TAG, "com.example.loren.altklausurenneu.User: " + exam.getDownloadurl());
 
                         //add to list
                         exams.add(exam);

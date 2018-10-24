@@ -5,10 +5,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
-import android.widget.Toast;
 
 
 import com.google.android.gms.tasks.Continuation;
@@ -28,7 +26,6 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.ref.Reference;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,6 +39,7 @@ public class FirebaseMethods {
         this.context = context;
     }
 
+    //fields for exams
     private static final String DATABASE_CATEGORY = "category";
     private static final String DATABASE_SEMESTER = "semester";
     private static final String DATABASE_NAME = "name";
@@ -49,6 +47,12 @@ public class FirebaseMethods {
     private static final String DATABASE_UID = "user_id";
     private static final String DATABASE_DOWNLOADURL = "downloadurl";
     private static final String TAG = "FirebaseDatase";
+
+    //fields for users
+    private static final String USERDB_UID="user_id";
+    private static final String USERDB_EMAIL="mail";
+    private static final String USERDB_STUDIENGANG="course";
+
     private UploadTask uploadTask;
 
 
@@ -63,7 +67,8 @@ public class FirebaseMethods {
 
     private StorageReference storageReference = FirebaseStorage.getInstance().getReference();
     private StorageReference Reference;
-    private DatabaseReference databaseReference = getDatabase().getReference("exams");
+    private DatabaseReference databaseReferenceExams = getDatabase().getReference("exams");
+    private DatabaseReference databaseReferenceUser = getDatabase().getReference("users");
 
 
 
@@ -80,11 +85,11 @@ public class FirebaseMethods {
      * @return
      */
     public Query selectExamByChild(String childtype, String key) {
-        return databaseReference.orderByChild(childtype).equalTo(key);
+        return databaseReferenceExams.orderByChild(childtype).equalTo(key);
     }
 
     public Query selectAllExamsFromUser(String userID){
-        return databaseReference.orderByChild("user_id").equalTo(userID);
+        return databaseReferenceExams.orderByChild("user_id").equalTo(userID);
     }
 
 
@@ -116,7 +121,7 @@ public class FirebaseMethods {
         examneu.put(DATABASE_UID, exam.getUserid());
         examneu.put(DATABASE_DOWNLOADURL, exam.getDownloadurl());
 
-        databaseReference.push().setValue(examneu).addOnSuccessListener(new OnSuccessListener<Void>() {
+        databaseReferenceExams.push().setValue(examneu).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
                 Log.d(TAG, "Erfolgreich hochgeladen");
@@ -125,9 +130,31 @@ public class FirebaseMethods {
             @Override
             public void onFailure(@NonNull Exception e) {
                 Log.d(TAG, "Upload fehlgeschlagen:" + e.getMessage());
+                e.printStackTrace();
             }
         });
 
+
+    }
+
+    public void uploadNewUser(User user){
+        Map<String, String > userneu = new HashMap<>();
+        userneu.put(USERDB_EMAIL,user.getEMail());
+        userneu.put(USERDB_STUDIENGANG,user.getStudiengang());
+        userneu.put(USERDB_UID,user.getUserID());
+
+        databaseReferenceUser.child(user.getUserID()).setValue(userneu).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Log.d(TAG,"User erfolgreich hinzugefügt");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+               Log.d(TAG,"User konnte nicht hinzugefügt werden.");
+               e.printStackTrace();
+            }
+        });
 
     }
 
