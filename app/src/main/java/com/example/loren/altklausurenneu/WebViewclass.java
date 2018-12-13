@@ -9,6 +9,8 @@ import android.util.Log;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
+//todo still needed??
+
 public class WebViewclass extends AppCompatActivity {
 
     private static final String TAG = "WebViewClass";

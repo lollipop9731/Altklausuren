@@ -3,8 +3,6 @@ package com.example.loren.altklausurenneu;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.media.SoundPool;
 import android.os.Bundle;
 import android.support.annotation.IntDef;
 import android.support.annotation.NonNull;
@@ -29,15 +27,8 @@ import android.widget.Toast;
 
 
 import com.example.loren.altklausurenneu.Utils.Utils;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.AdditionalUserInfo;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.UserInfo;
 
-
-import org.jetbrains.annotations.Contract;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -48,10 +39,12 @@ import java.util.List;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, ModulChooseFragment.FragmentInteractionListener{
     private static final int NOTCHOOSEN = -99;
     public static final String USERID = "Meine Protokolle";
     private int selectedList;
+
+    //todo cleeeeeean!!!!!!!!!!
 
     //annotation to allow not every value for saving selected item
     @Retention(RetentionPolicy.SOURCE)
@@ -69,6 +62,13 @@ public class MainActivity extends AppCompatActivity
 
     FabSpeedDial fabSpeedDial;
     FirebaseAuth mAuth;
+
+    @Override
+    public void onFragmentInteraction(String title) {
+        //change title when fragment calls
+        getSupportActionBar().setTitle(title);
+
+    }
 
     private static final String TAG = "MainActivity";
 
@@ -229,7 +229,7 @@ public class MainActivity extends AppCompatActivity
                 if (childPosition == (expandableListView.getChildCount() - 2)) {
                     android.app.FragmentManager fragmentManager = getFragmentManager();
                     android.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                    Fragment fragment1 = GridView.newInstance();
+                    Fragment fragment1 = ModulChooseFragment.newInstance();
                     fragmentTransaction.replace(R.id.fragment_container, fragment1);
                     fragmentTransaction.commit();
                 }
@@ -253,7 +253,7 @@ public class MainActivity extends AppCompatActivity
                 android.app.FragmentManager fragmentManager = getFragmentManager();
                 android.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 Fragment fragment = new ProtocolFragment();
-                Fragment fragment1 = GridView.newInstance();
+                Fragment fragment1 = ModulChooseFragment.newInstance();
 
                 FragmentManager support = getSupportFragmentManager();
                 FragmentTransaction fragmentTransactionsupport = support.beginTransaction();
@@ -452,6 +452,8 @@ public class MainActivity extends AppCompatActivity
 
         Utils.getDatabase();
         mAuth = FirebaseAuth.getInstance();
+
+
 
 
     }

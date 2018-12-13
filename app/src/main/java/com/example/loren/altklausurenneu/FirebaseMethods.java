@@ -26,6 +26,7 @@ import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -52,6 +53,9 @@ public class FirebaseMethods {
     private static final String USERDB_UID="user_id";
     private static final String USERDB_EMAIL="mail";
     private static final String USERDB_STUDIENGANG="course";
+
+    //fields for new moduls
+    private static final String NEWMODUL="modul";
 
     private UploadTask uploadTask;
 
@@ -135,6 +139,42 @@ public class FirebaseMethods {
         });
 
 
+    }
+
+    /**
+     * Uploads chosen module to the current user
+     * @param stringArrayList
+     */
+    public void addModuleToCurrentUser(ArrayList<String> stringArrayList){
+
+        DatabaseReference reference = getDatabase().getReference().child("users").child( FirebaseAuth.getInstance().getCurrentUser().getUid()).child("module");
+        Map<String,Boolean> stringKeyMap = new HashMap<>();
+        for (String item: stringArrayList) {
+            stringKeyMap.put(item,true);
+        }
+        reference.setValue(stringKeyMap);
+
+    }
+
+
+    /**
+     * Deletes the modul with the given name
+     * @param modulname
+     */
+    public void deleteModuleFromCurrentUser(final String modulname){
+        DatabaseReference reference = getDatabase().getReference().child("users").child( FirebaseAuth.getInstance().getCurrentUser().getUid()).child("module").child(modulname);
+        reference.removeValue().addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Log.d(TAG,modulname + " konnte nicht gelöscht werden: " + e.getMessage());
+            }
+        });
+       reference.removeValue();
+}
+
+    public Query selectAllModulsOfCurrentUser(){
+        DatabaseReference reference = getDatabase().getReference("users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("module");
+        return  reference.orderByChild("module");
     }
 
     public void uploadNewUser(User user){
