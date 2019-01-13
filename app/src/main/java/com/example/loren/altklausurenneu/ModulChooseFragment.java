@@ -28,7 +28,6 @@ public class ModulChooseFragment extends Fragment {
     private FragmentInteractionListener mFragmentInteractionlistener;
 
 
-
     MyRecyclerViewAdapter adapter;
     MyRecyclerViewAdapter adapter_chosen;
     String TAG = getTag();
@@ -59,7 +58,7 @@ public class ModulChooseFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         //communicate with activity for new title
-        if(mFragmentInteractionlistener!=null){
+        if (mFragmentInteractionlistener != null) {
             mFragmentInteractionlistener.onFragmentInteraction("Module hinzufügen");
 
         }
@@ -99,7 +98,8 @@ public class ModulChooseFragment extends Fragment {
         poolmoduls.add("Statistik");
         poolmoduls.add("IT-Security & Business Continuity");
 
-       //set the chip layoutmanager to both of the recyclerviews
+
+        //set the chip layoutmanager to both of the recyclerviews
         recyclerView.setLayoutManager(chipsLayoutManager);
         recyclerViewMyModuls.setLayoutManager(chipsLayoutManagerModulPool);
 
@@ -115,7 +115,7 @@ public class ModulChooseFragment extends Fragment {
                 for (DataSnapshot child : dataSnapshot.getChildren()) {
                     chosenmoduls.add(child.getKey());
 
-                } 
+                }
 
                 recyclerViewMyModuls.setAdapter(adapter_chosen);
 
@@ -135,7 +135,11 @@ public class ModulChooseFragment extends Fragment {
 
                 //add to pool of moduls and remove from chosen moduls
                 String clicked_modul = chosenmoduls.get(position);
-                poolmoduls.add(clicked_modul);
+                //nur zum Pool hinzufügen, wenn nicht schon drin!!
+                if(!poolmoduls.contains(clicked_modul)){
+                    poolmoduls.add(clicked_modul);
+                }
+
                 adapter.notifyDataSetChanged();
                 adapter_chosen.removeAt(position);
                 //remove from DB
@@ -143,22 +147,34 @@ public class ModulChooseFragment extends Fragment {
             }
         });
 
+        //get all Module from Hochschule of current user
+
         //adapter for modulpool
         adapter = new MyRecyclerViewAdapter(getActivity(), poolmoduls, false, new MyRecyclerViewAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(ModulView modulView, int position) {
 
                 //add to chosen moduls
-                String clickedmodul = poolmoduls.get(position);
+                String clickedmodul = "";
+                try{
+                    clickedmodul = poolmoduls.get(position);
+                }catch (IndexOutOfBoundsException e){
+                    //wenn man zu schnell clicked, kann es zu Index out of Bounds kommen
+                }
+
                 //checks if modul already selected
-                if(!chosenmoduls.contains(clickedmodul)) {
-                    chosenmoduls.add(poolmoduls.get(position));
+                if (!chosenmoduls.contains(clickedmodul)) {
+                    try{
+                        chosenmoduls.add(poolmoduls.get(position));
+                    }catch (IndexOutOfBoundsException e){
+                        //wenn man zu schnell clicked, kann es zu Index out of Bounds kommen
+                    }
+
                     adapter_chosen.notifyDataSetChanged();
                     adapter.removeAt(position);
                     //add to User DB
                     firebaseMethods.addModuleToCurrentUser(chosenmoduls);
                 }
-
 
 
             }
@@ -174,9 +190,9 @@ public class ModulChooseFragment extends Fragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        try{
-            mFragmentInteractionlistener = (FragmentInteractionListener)activity;
-        }catch (ClassCastException e){
+        try {
+            mFragmentInteractionlistener = (FragmentInteractionListener) activity;
+        } catch (ClassCastException e) {
             throw new ClassCastException(activity.toString()
                     + " must implement OnFragmentInteractionListener");
         }
@@ -185,14 +201,12 @@ public class ModulChooseFragment extends Fragment {
     @Override
     public void onDetach() {
         super.onDetach();
-        mFragmentInteractionlistener=null;
+        mFragmentInteractionlistener = null;
     }
 
-    public interface FragmentInteractionListener{
+    public interface FragmentInteractionListener {
         void onFragmentInteraction(String title);
     }
-
-
 
 
 }

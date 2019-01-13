@@ -1,6 +1,5 @@
 package com.example.loren.altklausurenneu;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -12,7 +11,6 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.internal.NavigationMenu;
 import android.support.design.widget.Snackbar;
-import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -24,9 +22,7 @@ import android.webkit.MimeTypeMap;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 
-import com.example.loren.altklausurenneu.Utils.Utils;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -274,7 +270,7 @@ public class MainFragment extends android.app.Fragment implements FirebaseMethod
         firebaseMethods.setMethodsInter(fireBaseMethodsInter);
 
 
-        if (getModule().equals(MainActivity.USERID)) {
+        if (getModule().equals(MainActivity.MEINEPROTOKOLLE)) {
             //own protocolls
             Query query = firebaseMethods.selectAllExamsFromUser(mAuth.getUid());
             query.addValueEventListener(getDataValueEvent());

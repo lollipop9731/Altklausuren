@@ -126,6 +126,7 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     }
 
     public void removeAt(int position){
+        //todo hier war nen IndexoutofBounds
            myDataset.remove(position);
            notifyItemRemoved(position);
            notifyItemRangeChanged(position,getItemCount());

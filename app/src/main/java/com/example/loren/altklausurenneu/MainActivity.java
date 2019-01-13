@@ -1,5 +1,6 @@
 package com.example.loren.altklausurenneu;
 
+import android.app.DownloadManager;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
@@ -28,6 +29,11 @@ import android.widget.Toast;
 
 import com.example.loren.altklausurenneu.Utils.Utils;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Query;
+import com.google.firebase.database.ValueEventListener;
 
 
 import java.lang.annotation.Retention;
@@ -39,10 +45,11 @@ import java.util.List;
 import io.github.yavski.fabspeeddial.FabSpeedDial;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, ModulChooseFragment.FragmentInteractionListener{
+        implements NavigationView.OnNavigationItemSelectedListener, ModulChooseFragment.FragmentInteractionListener {
     private static final int NOTCHOOSEN = -99;
-    public static final String USERID = "Meine Protokolle";
+    public static final String MEINEPROTOKOLLE = "Meine Protokolle";
     private int selectedList;
+    private User user;
 
     //todo cleeeeeean!!!!!!!!!!
 
@@ -112,13 +119,11 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Log.d(TAG, "Selected ITEM: " + getSelectedItem());
-
 
         context = getApplicationContext();
 
         //open Meine Protokolle on start
-        openMainFragement(USERID);
+        openMainFragement(MEINEPROTOKOLLE);
 
 
         init();
@@ -147,9 +152,8 @@ public class MainActivity extends AppCompatActivity
         expandableListView = (ExpandableListView) findViewById(R.id.expandListNav);
         //preparing list Data
         prepareList();
-        //set Adapter for expandable List
-        expandableListAdapter = new ExpandableListAdapter(this, listDataHeader, listDataChild);
-        expandableListView.setAdapter(expandableListAdapter);
+        expandableListAdapter = new ExpandableListAdapter(context, listDataHeader, listDataChild);
+
 
         //Adapter for List in Navigation Drawer
         navdrawerheader = new String[3];
@@ -263,7 +267,7 @@ public class MainActivity extends AppCompatActivity
                     case 0:
 
 
-                        openMainFragement(USERID);
+                        openMainFragement(MEINEPROTOKOLLE);
                         break;
 
                     case 1:
@@ -303,16 +307,43 @@ public class MainActivity extends AppCompatActivity
         //adding header data
         listDataHeader.add("Modul auswählen");
 
-        //Adding child Data
-        List<String> module = new ArrayList<>();
-        module.add("Mobile Systeme");
-        module.add("WI-MAG I");
-        module.add("Entrepreneurship");
-        module.add("ERP-Systeme");
-        module.add("Betriebssysteme");
-        module.add("Modul hinzufügen...");
+        firebaseMethods = new FirebaseMethods(context);
 
-        listDataChild.put(listDataHeader.get(0), module);
+        //Adding child Data
+        final List<String> module = new ArrayList<>();
+
+        //get all moduls from current user
+        Query querygetModule = firebaseMethods.selectAllModulsOfCurrentUser();
+        querygetModule.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                module.clear();
+                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                    //add every modul to Modulelist für expandable list view
+                    String modul = snapshot.getKey();
+                    module.add(modul);
+                }
+
+                //an letzte Stelle Eintrag mit Modul hinzufügen
+                module.add("Modul hinzufügen...");
+                listDataChild.put(listDataHeader.get(0), module);
+
+                //set Adapter for expandable List
+                expandableListAdapter = new ExpandableListAdapter(context, listDataHeader, listDataChild);
+                expandableListView.setAdapter(expandableListAdapter);
+
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+
+
+
+
     }
 
     private void setSelectedItem(@ListType int list, int position) {
@@ -452,8 +483,6 @@ public class MainActivity extends AppCompatActivity
 
         Utils.getDatabase();
         mAuth = FirebaseAuth.getInstance();
-
-
 
 
     }

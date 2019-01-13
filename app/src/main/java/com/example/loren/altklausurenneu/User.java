@@ -4,11 +4,15 @@ public class User {
     private String UserID;
     private String EMail;
     private String Studiengang;
+    private String hochschule;
 
     public User(String userID, String EMail, String studiengang) {
         UserID = userID;
         this.EMail = EMail;
         Studiengang = studiengang;
+    }
+
+    public User() {
     }
 
     public User(String userID, String EMail) {
@@ -44,5 +48,13 @@ public class User {
 
     public void setStudiengang(String studiengang) {
         Studiengang = studiengang;
+    }
+
+    public String getHochschule() {
+        return hochschule;
+    }
+
+    public void setHochschule(String hochschule) {
+        this.hochschule = hochschule;
     }
 }

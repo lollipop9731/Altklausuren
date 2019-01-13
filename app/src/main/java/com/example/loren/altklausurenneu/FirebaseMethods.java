@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.provider.ContactsContract;
 import android.support.annotation.NonNull;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
@@ -32,6 +33,8 @@ import java.util.Map;
 
 public class FirebaseMethods {
 
+    private static final String DB_HOCHSCHULE_NAME = "name";
+    private static final String DB_HOCHSCHULE_MODULE = "module";
     private Context context;
     private File localFile;
     StorageReference sRef;
@@ -50,12 +53,12 @@ public class FirebaseMethods {
     private static final String TAG = "FirebaseDatase";
 
     //fields for users
-    private static final String USERDB_UID="user_id";
-    private static final String USERDB_EMAIL="mail";
-    private static final String USERDB_STUDIENGANG="course";
+    private static final String USERDB_UID = "user_id";
+    private static final String USERDB_EMAIL = "mail";
+    private static final String USERDB_STUDIENGANG = "course";
 
     //fields for new moduls
-    private static final String NEWMODUL="modul";
+    private static final String NEWMODUL = "modul";
 
     private UploadTask uploadTask;
 
@@ -73,8 +76,9 @@ public class FirebaseMethods {
     private StorageReference Reference;
     private DatabaseReference databaseReferenceExams = getDatabase().getReference("exams");
     private DatabaseReference databaseReferenceUser = getDatabase().getReference("users");
-
-
+    private DatabaseReference databaseReferenceHochschule = getDatabase().getReference("hochschule");
+    //todo reference überarbeiten, direkt ID war zum testen
+    private DatabaseReference databaseReferenceModule = getDatabase().getReference("hochschule").child("-LW3-j2Nx9Kr7KA1_Wh1");
 
 
     public void setMethodsInter(FireBaseMethodsInter methodsInter) {
@@ -83,17 +87,28 @@ public class FirebaseMethods {
     }
 
     /**
-     *
      * @param childtype url, name, ...
-     * @param key the searched value
+     * @param key       the searched value
      * @return
      */
     public Query selectExamByChild(String childtype, String key) {
         return databaseReferenceExams.orderByChild(childtype).equalTo(key);
     }
 
-    public Query selectAllExamsFromUser(String userID){
+    public Query selectAllExamsFromUser(String userID) {
         return databaseReferenceExams.orderByChild("user_id").equalTo(userID);
+    }
+
+    public Query selectAllModuleFromHochschule(String hochschuleID){
+
+        DatabaseReference reference = getDatabase().getReference("hochschule").child(hochschuleID).child("module");
+        return reference;
+
+    }
+
+    public DatabaseReference getCurrentUser(String userid){
+        DatabaseReference reference = getDatabase().getReference("users").child(userid);
+        return reference;
     }
 
 
@@ -108,6 +123,35 @@ public class FirebaseMethods {
     }
 
     //todo delete filepath -> we only need name to get pdf
+
+    /**
+     * Adds new Hochschule as own child to firebase
+     * @param hochschule
+     */
+    public void addNewHochschule(Hochschule hochschule) {
+
+        Map<String, String> map = new HashMap<>();
+        map.put(DB_HOCHSCHULE_NAME, hochschule.getName());
+
+        databaseReferenceHochschule.push().setValue(map);
+    }
+
+    public void addModulesToHochschule(Hochschule hochschule){
+        Map <String,String> map = new HashMap<>();
+        for (String item:hochschule.getModule()) {
+            map.put(DB_HOCHSCHULE_MODULE,item);
+        }
+        databaseReferenceModule.child("module").setValue(hochschule.getModule());
+
+    }
+
+    public void setUserdbHochschule(String id){
+
+        DatabaseReference reference = getDatabase().getReference("users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("hochschule");
+        reference.setValue(id);
+    }
+
+
 
     /**
      * Writes new DB Entry with the details about the new exam
@@ -143,14 +187,16 @@ public class FirebaseMethods {
 
     /**
      * Uploads chosen module to the current user
+     *
      * @param stringArrayList
      */
-    public void addModuleToCurrentUser(ArrayList<String> stringArrayList){
+    public void addModuleToCurrentUser(ArrayList<String> stringArrayList) {
 
-        DatabaseReference reference = getDatabase().getReference().child("users").child( FirebaseAuth.getInstance().getCurrentUser().getUid()).child("module");
-        Map<String,Boolean> stringKeyMap = new HashMap<>();
-        for (String item: stringArrayList) {
-            stringKeyMap.put(item,true);
+        //todo warum immer komplette Liste neu ? Effektiver nur hinzuzufügen
+        DatabaseReference reference = getDatabase().getReference().child("users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("module");
+        Map<String, Boolean> stringKeyMap = new HashMap<>();
+        for (String item : stringArrayList) {
+            stringKeyMap.put(item, true);
         }
         reference.setValue(stringKeyMap);
 
@@ -159,40 +205,41 @@ public class FirebaseMethods {
 
     /**
      * Deletes the modul with the given name
+     *
      * @param modulname
      */
-    public void deleteModuleFromCurrentUser(final String modulname){
-        DatabaseReference reference = getDatabase().getReference().child("users").child( FirebaseAuth.getInstance().getCurrentUser().getUid()).child("module").child(modulname);
+    public void deleteModuleFromCurrentUser(final String modulname) {
+        DatabaseReference reference = getDatabase().getReference().child("users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("module").child(modulname);
         reference.removeValue().addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                Log.d(TAG,modulname + " konnte nicht gelöscht werden: " + e.getMessage());
+                Log.d(TAG, modulname + " konnte nicht gelöscht werden: " + e.getMessage());
             }
         });
-       reference.removeValue();
-}
-
-    public Query selectAllModulsOfCurrentUser(){
-        DatabaseReference reference = getDatabase().getReference("users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("module");
-        return  reference.orderByChild("module");
+        reference.removeValue();
     }
 
-    public void uploadNewUser(User user){
-        Map<String, String > userneu = new HashMap<>();
-        userneu.put(USERDB_EMAIL,user.getEMail());
-        userneu.put(USERDB_STUDIENGANG,user.getStudiengang());
-        userneu.put(USERDB_UID,user.getUserID());
+    public Query selectAllModulsOfCurrentUser() {
+        DatabaseReference reference = getDatabase().getReference("users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).child("module");
+        return reference.orderByChild("module");
+    }
+
+    public void uploadNewUser(User user) {
+        Map<String, String> userneu = new HashMap<>();
+        userneu.put(USERDB_EMAIL, user.getEMail());
+        userneu.put(USERDB_STUDIENGANG, user.getStudiengang());
+        userneu.put(USERDB_UID, user.getUserID());
 
         databaseReferenceUser.child(user.getUserID()).setValue(userneu).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                Log.d(TAG,"User erfolgreich hinzugefügt");
+                Log.d(TAG, "User erfolgreich hinzugefügt");
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-               Log.d(TAG,"User konnte nicht hinzugefügt werden.");
-               e.printStackTrace();
+                Log.d(TAG, "User konnte nicht hinzugefügt werden.");
+                e.printStackTrace();
             }
         });
 
